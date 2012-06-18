@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[My Octopress Blog]]></title>
+  <title><![CDATA[Reminiscential: of or pertaining to rememberance]]></title>
   <link href="http://kevinjqiu.github.com/atom.xml" rel="self"/>
   <link href="http://kevinjqiu.github.com/"/>
-  <updated>2012-06-18T16:31:57-04:00</updated>
+  <updated>2012-06-18T16:52:33-04:00</updated>
   <id>http://kevinjqiu.github.com/</id>
   <author>
     <name><![CDATA[Kevin Jing Qiu]]></name>
