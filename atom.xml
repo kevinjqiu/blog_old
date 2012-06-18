@@ -4,13 +4,22 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://kevinjqiu.github.com/atom.xml" rel="self"/>
   <link href="http://kevinjqiu.github.com/"/>
-  <updated>2012-06-18T14:34:32-04:00</updated>
+  <updated>2012-06-18T14:51:27-04:00</updated>
   <id>http://kevinjqiu.github.com/</id>
   <author>
-    <name><![CDATA[Your Name]]></name>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[First octopress post]]></title>
+    <link href="http://kevinjqiu.github.com/blog/2012/06/18/first-octopress-post/"/>
+    <updated>2012-06-18T14:50:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/blog/2012/06/18/first-octopress-post</id>
+    <content type="html"><![CDATA[<h1>Try this static blog generator called <code>octopress</code></h1>
+]]></content>
+  </entry>
   
 </feed>
