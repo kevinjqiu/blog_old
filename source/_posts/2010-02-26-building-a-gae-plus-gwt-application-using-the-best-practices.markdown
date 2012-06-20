@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Building a GAE+GWT application using the best practices (part 1)"
+title: "Building a GAE+GWT application using the best practices (Part 1)"
 date: 2010-02-26 00:39
 comments: true
 categories: java, gwt, gae
