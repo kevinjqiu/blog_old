@@ -6,6 +6,13 @@ comments: true
 categories: java, gwt, gae
 ---
 
+## Building a GAE+GWT application using the best practices series
+1. [Part 1](/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/)
+2. Part 2
+3. [Part 3](/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/)
+4. [Part 4](/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/)
+5. [Part 5](/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/)
+
 In Part 2, we're going to go over project setup for GAE and GWT applications, and wire the server (servlet) using [Guice](http://code.google.com/p/google-guice/) and [GWT-Dispatch](http://code.google.com/p/gwt-dispatch/).
 
 ## Project setup

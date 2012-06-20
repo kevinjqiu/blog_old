@@ -1,10 +1,17 @@
 ---
 layout: post
 title: "Building a GAE+GWT application using the best practices (Part 4)"
-date: 2012-06-20 13:15
+date: 2010-03-03 13:15
 comments: true
 categories: java, gwt, gae
 ---
+
+## Building a GAE+GWT application using the best practices series
+1. [Part 1](/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/)
+2. [Part 2](/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/)
+3. [Part 3](/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/)
+4. Part 4
+5. [Part 5](/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/)
 
 In the last blog post, we went over how to write GWT-RPC handlers using GWT-dispatch and dependency injection (Guice). This section, we're going to see how the client side is set up.
 

@@ -6,6 +6,13 @@ comments: true
 categories: java, gae, gwt
 ---
 
+## Building a GAE+GWT application using the best practices series
+1. [Part 1](/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/)
+2. [Part 2](/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/)
+3. Part 3
+4. [Part 4](/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/)
+5. [Part 5](/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/)
+
 In this part of the series, we're going to explore the designing of the web services for RateChecker and coding them using the command pattern from [GWT-dispatch](http://code.google.com/p/gwt-dispatch/) based on Ray Ryan's [presentation](http://www.youtube.com/watch?v=PDuhR18-EdM).
 
 ## The big picture
