@@ -223,6 +223,8 @@ func tally(results <-chan int) int {
 
 One thing worth mentioning is that even though the channels we made are all bi-directional channels, in the specific functions, we can make them more restrictive by making them send-only (chan<- Type) or receive-only (<-chan Type) according to their actual usage in the local function to avoid accidents.
 
+The full gist can be found [here](https://gist.github.com/kevinjqiu/7568264#file-sumprimes-go).
+
 Performance
 -----------
 
