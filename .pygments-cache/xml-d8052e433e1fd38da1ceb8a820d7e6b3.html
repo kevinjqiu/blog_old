@@ -1,0 +1,34 @@
+<div class="highlight"><pre><span class="cp">&lt;!DOCTYPE ui:UiBinder SYSTEM &quot;http://dl.google.com/gwt/DTD/xhtml.ent&quot;&gt;</span>
+<span class="nt">&lt;ui:UiBinder</span> <span class="na">xmlns:ui=</span><span class="s">&quot;urn:ui:com.google.gwt.uibinder&quot;</span>
+    <span class="na">xmlns:g=</span><span class="s">&quot;urn:import:com.google.gwt.user.client.ui&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;ui:style&gt;</span>
+        .rateDisplay {
+            font-size: x-large;
+            font-weight: bolder;
+        }
+        
+        .mainPanel {
+            padding: 10px;
+        }
+    <span class="nt">&lt;/ui:style&gt;</span>
+
+    <span class="nt">&lt;ui:with</span> <span class="na">type=</span><span class="s">&quot;ratechecker.client.bundles.RateCheckerClientBundle&quot;</span>
+        <span class="na">field=</span><span class="s">&quot;bundle&quot;</span><span class="nt">&gt;&lt;/ui:with&gt;</span>
+    <span class="nt">&lt;g:DecoratorPanel</span> <span class="na">height=</span><span class="s">&quot;200px&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;g:VerticalPanel</span> <span class="na">styleName=</span><span class="s">&quot;{style.mainPanel}&quot;</span> <span class="na">verticalAlignment=</span><span class="s">&quot;ALIGN_TOP&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;g:Label&gt;</span>Latest Selling Rate<span class="nt">&lt;/g:Label&gt;</span>
+            <span class="nt">&lt;g:Image</span> <span class="na">resource=</span><span class="s">&quot;{bundle.loading}&quot;</span> <span class="na">visible=</span><span class="s">&quot;false&quot;</span>
+                <span class="na">ui:field=</span><span class="s">&quot;loading&quot;</span><span class="nt">&gt;&lt;/g:Image&gt;</span>
+            <span class="nt">&lt;g:Label</span> <span class="na">ui:field=</span><span class="s">&quot;rateDisplay&quot;</span> <span class="na">styleName=</span><span class="s">&quot;{style.rateDisplay}&quot;</span><span class="nt">&gt;&lt;/g:Label&gt;</span>
+            <span class="nt">&lt;g:HorizontalPanel&gt;</span>
+                <span class="nt">&lt;g:Button</span> <span class="na">ui:field=</span><span class="s">&quot;fetchLatest&quot;</span><span class="nt">&gt;</span>Fetch Latest<span class="nt">&lt;/g:Button&gt;</span>
+                <span class="nt">&lt;g:Button</span> <span class="na">ui:field=</span><span class="s">&quot;refresh&quot;</span><span class="nt">&gt;</span>Refresh<span class="nt">&lt;/g:Button&gt;</span>
+            <span class="nt">&lt;/g:HorizontalPanel&gt;</span>
+
+            <span class="nt">&lt;g:Label&gt;</span>Recent rates<span class="nt">&lt;/g:Label&gt;</span>
+            <span class="nt">&lt;g:FlexTable</span> <span class="na">ui:field=</span><span class="s">&quot;rateTable&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;/g:FlexTable&gt;</span>
+        <span class="nt">&lt;/g:VerticalPanel&gt;</span>
+    <span class="nt">&lt;/g:DecoratorPanel&gt;</span>
+<span class="nt">&lt;/ui:UiBinder&gt;</span> 
+</pre></div>

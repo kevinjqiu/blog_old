@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GXT Widget Expander 1.0 release - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="This project aims to add flexibility to GXT row expander by enabling putting arbitrary widgets in the expanded row. GXT&#8217;s grid widget is great &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/02/09/gxt-widget-expander-1-dot-0-release/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">GXT Widget Expander 1.0 Release</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-09T00:37:00-05:00" pubdate data-updated="true">Feb 9<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This project aims to add flexibility to GXT row expander by enabling putting arbitrary widgets in the expanded row.</p>
+
+<p>GXT&#8217;s grid widget is great, especially with the RowExpander plugin, it allows the creation of a Google Reader style grid (a list with expandable rows). However, the current GXT&#8217;s RowExpander design only allows rendering by XTemplate. XTemplate falls short in a number of ways, especially when it comes to user interaction inside the expanded rows.</p>
+
+<p>Using the WidgetExpander, you&#8217;ll write something similar to the following</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">WidgetExpander</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;</span> <span class="n">expander</span> <span class="o">=</span> <span class="k">new</span> <span class="n">WidgetExpander</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;(</span><span class="k">new</span> <span class="n">WidgetRowRenderer</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Widget</span> <span class="nf">render</span><span class="o">(</span><span class="kd">final</span> <span class="n">SomeModel</span> <span class="n">model</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">rowIdx</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// Create and return a widget according to the model</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">});</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// Add expander into a list of ColumnConfigs</span>
+</span><span class='line'><span class="c1">// Create a grid with the ColumnConfig list</span>
+</span><span class='line'><span class="n">grid</span><span class="o">.</span><span class="na">addGridPlugin</span><span class="o">(</span><span class="n">expander</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>With this enhancement, we&#8217;re now able to do this:
+<a href="http://reminiscential.files.wordpress.com/2010/02/2010-02-24_1654.png"><img src="http://reminiscential.files.wordpress.com/2010/02/2010-02-24_1654.png?w=300" alt="" title="effect" width="300" height="101" class="aligncenter size-medium wp-image-141" /></a></p>
+
+<p>Check it out here on Github: <a href="http://github.com/kevinjqiu/gxt-widget-expander">http://github.com/kevinjqiu/gxt-widget-expander</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-02-09T00:37:00-05:00" pubdate data-updated="true">Feb 9<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gwt/'>gwt</a>, <a class='category' href='/blog/categories/java-/'>java,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/02/09/gxt-widget-expander-1-dot-0-release/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/02/09/gxt-widget-expander-1-dot-0-release/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2009/12/18/setting-up-gwt2-project-with-gwt-maven-plugin/" title="Previous Post: Setting up GWT2 project with gwt-maven-plugin">&laquo; Setting up GWT2 project with gwt-maven-plugin</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/" title="Next Post: Building a GAE+GWT application using the best practices (Part 1)">Building a GAE+GWT application using the best practices (Part 1) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/02/09/gxt-widget-expander-1-dot-0-release/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/02/09/gxt-widget-expander-1-dot-0-release/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

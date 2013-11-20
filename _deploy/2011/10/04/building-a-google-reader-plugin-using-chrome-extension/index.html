@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Building a Google Reader plugin using Chrome extension - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="OK, ok, I understand. The title is a bit misleading. Google Reader isn&#8217;t open for 3rd party plugins, and there&#8217;s no indication that &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Building a Google Reader Plugin Using Chrome Extension</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-04T20:14:00-04:00" pubdate data-updated="true">Oct 4<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>OK, ok, I understand. The title is a bit misleading. <a href="http://reader.google.com">Google Reader</a> isn&#8217;t open for 3rd party plugins, and there&#8217;s no indication that Google will ever. However, with Google Chrome extension, we can build such local &#8220;plugins&#8221;.</p>
+
+<h2>What are we going to achieve?</h2>
+
+<p>Anyone uses Google Reader to read <a href="http://www.dzone.com">DZone</a> feeds? I do. DZone is a very good tech news aggregator and you can vote and comment on stories. With Google Reader, you get DZone feeds like the following. I don&#8217;t know about you but for me, sometimes I just want to read the original story without going to the DZone page. It&#8217;d be nice if they have a &#8220;click through&#8221; action (like the following) on the action bar that brings you to the original story.</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2011/10/screenshot-google-reader-539-chromium.png"><img src="http://reminiscential.files.wordpress.com/2011/10/screenshot-google-reader-539-chromium.png?w=300" alt="End goal" title="Screenshot-Google Reader (539) - Chromium" width="300" height="100" class="aligncenter size-medium wp-image-262" /></a></p>
+
+<h2>Basic strategy</h2>
+
+<p>So, how are we going to implement this feature? Chrome Extension code can be injected into the running page, and have full access to its DOM. Therefore, we can write code such that if the currently opened entry is a DZone entry, we insert &#8216;Click Through&#8217; action into the entry action bar (action bar is the bar underneath the main entry, where &#8216;Add Star&#8217;, &#8216;Like&#8217;, &#8216;Share&#8217; actions are). The &#8216;Click Through&#8217; action, when clicked, will read the feed URL, fetch it in the background, parse it and get the URL of the original story, and open the original URL in a separate tab.</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2011/10/untitled-1.png"><img class="aligncenter size-medium wp-image-261" title="strategy" src="http://reminiscential.files.wordpress.com/2011/10/untitled-1.png?w=300" alt="" width="300" height="231" /></a></p>
+
+<h3>Create a manifest</h3>
+
+<p>A Chrome extension must have a manifest.json file containing the metadata of the extension.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="s2">&quot;name&quot;</span><span class="o">:</span><span class="s2">&quot;GReader&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;version&quot;</span><span class="o">:</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;description&quot;</span><span class="o">:</span><span class="s2">&quot;Enhanced Google Reader experience&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;permissions&quot;</span><span class="o">:</span> <span class="p">[</span>
+</span><span class='line'>        <span class="s2">&quot;http://*.dzone.com/&quot;</span>
+</span><span class='line'>    <span class="p">],</span>
+</span><span class='line'>    <span class="s2">&quot;background_page&quot;</span><span class="o">:</span><span class="s2">&quot;background.html&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="s2">&quot;content_scripts&quot;</span><span class="o">:</span><span class="p">[{</span>
+</span><span class='line'>        <span class="s2">&quot;matches&quot;</span><span class="o">:</span><span class="p">[</span>
+</span><span class='line'>            <span class="s2">&quot;*://www.google.com/reader/view/*&quot;</span>
+</span><span class='line'>        <span class="p">],</span>
+</span><span class='line'>        <span class="s2">&quot;js&quot;</span><span class="o">:</span><span class="p">[</span>
+</span><span class='line'>            <span class="s2">&quot;lib/jquery-1.6.4.min.js&quot;</span><span class="p">,</span>
+</span><span class='line'>            <span class="s2">&quot;src/greader.js&quot;</span>
+</span><span class='line'>        <span class="p">],</span>
+</span><span class='line'>        <span class="s2">&quot;run_at&quot;</span><span class="o">:</span><span class="s2">&quot;document_idle&quot;</span>
+</span><span class='line'>    <span class="p">}]</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we</p>
+
+<ul>
+<li>specify that the extension needs to access any URL on dzone.com including its subdomains.</li>
+<li>specify the background page</li>
+<li>specify the content script</li>
+</ul>
+
+
+<p>The &#8220;run_at&#8221; property will dictate when the content script is going to be run. Because Google Reader is a full AJAX application, we want our script to be run when the document is fully rendered.</p>
+
+<p>We also specify the &#8220;matches&#8221; property, so our content script is only activated when the URL matches.</p>
+
+<h3>The content script</h3>
+
+<p>We start with:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">})(</span><span class="nx">jQuery</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This creates a function scope, which separates our <code>$</code> variable apart from the current page&#8217;s <code>$</code> variable. Google Reader (I assume, is using Google&#8217;s own closure library), already defines $ and it&#8217;s not the jQuery object. This idiom gives <code>$</code> as jQuery.</p>
+
+<p>We want to insert the &#8220;Click through&#8221; action in the entry action bar. To achieve this, we will need to listen on <code>DOMNodeInserted</code> event, and when such event happens and the node inserted is of the right CSS class name (&#8220;entry-action&#8221; here), we proceed to manipulate the DOM to add our customized actions.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#entries&quot;</span><span class="p">).</span><span class="nx">live</span><span class="p">(</span><span class="s1">&#39;DOMNodeInserted&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">className</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/entry\-actions/</span><span class="p">))</span>
+</span><span class='line'>        <span class="k">return</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">entryAction</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">EntryAction</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">));</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="nx">entryAction</span><span class="p">.</span><span class="nx">entry</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^http\:\/\/feeds\.dzone\.com/</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">entryAction</span><span class="p">.</span><span class="nx">addAction</span><span class="p">({</span>
+</span><span class='line'>            <span class="s1">&#39;name&#39;</span><span class="o">:</span><span class="s1">&#39;Click Through&#39;</span><span class="p">,</span>
+</span><span class='line'>            <span class="s1">&#39;fn&#39;</span><span class="o">:</span><span class="kd">function</span><span class="p">(</span><span class="nx">entry</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nx">chrome</span><span class="p">.</span><span class="nx">extension</span><span class="p">.</span><span class="nx">sendRequest</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="o">:</span><span class="s2">&quot;fetch_entry&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="o">:</span><span class="nx">entry</span><span class="p">.</span><span class="nx">url</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                    <span class="kd">var</span> <span class="nx">matched</span> <span class="o">=</span> <span class="sr">/&lt;div class=&quot;ldTitle&quot;&gt;(.*?)&lt;\/div&gt;/</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+</span><span class='line'>                    <span class="kd">var</span> <span class="nx">href</span> <span class="o">=</span> <span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="nx">matched</span><span class="p">[</span><span class="mi">1</span><span class="p">]).</span><span class="nx">attr</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">));</span>
+</span><span class='line'>                    <span class="k">if</span> <span class="p">(</span><span class="nx">href</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                        <span class="nx">chrome</span><span class="p">.</span><span class="nx">extension</span><span class="p">.</span><span class="nx">sendRequest</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="o">:</span><span class="s2">&quot;open_tab&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="o">:</span><span class="nx">href</span><span class="p">},</span> <span class="kd">function</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                            <span class="c1">// TODO: do something afterwards?</span>
+</span><span class='line'>                        <span class="p">});</span>
+</span><span class='line'>                    <span class="p">}</span>
+</span><span class='line'>                <span class="p">});</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">});</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here I built a little bit of abstraction around the raw entry action bar. It&#8217;s encapsulated in EntryAction class, which I&#8217;ll show in a moment. Basically, if the current displaying entry&#8217;s feed URL starts with feed.dzone.com, I&#8217;ll build the &#8220;click through&#8221; action, and set the click handler. It sends the feed URL to the background script. The background script will do the cross-site request to fetch the feed content and send it back. Then the content script will regex match the content to get the original story&#8217;s URL, and ask chrome to open the URL in a new tab.</p>
+
+<p>Here&#8217;s the code for <code>EntryAction</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="kd">var</span> <span class="nx">EntryAction</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">element</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">entryElmt</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">parent</span><span class="p">(</span><span class="s2">&quot;.entry&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="nx">entryElmt</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;.entry-title-link&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">entry</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="s2">&quot;url&quot;</span> <span class="o">:</span> <span class="nx">url</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">EntryAction</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addAction</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+</span><span class='line'>    <span class="kd">var</span> <span class="nx">onclick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kd">var</span> <span class="nx">actionFunc</span> <span class="o">=</span> <span class="nx">action</span><span class="p">[</span><span class="s1">&#39;fn&#39;</span><span class="p">];</span>
+</span><span class='line'>        <span class="nx">actionFunc</span><span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">entry</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;span&gt;&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">.</span><span class="nx">addClass</span><span class="p">(</span><span class="s2">&quot;link unselectable&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="nx">action</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+</span><span class='line'>        <span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">onclick</span><span class="p">));</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I won&#8217;t delve too much into this code. It makes assumptions about the structure of the DOM that Google Reader renders into. This does make the extension brittle but that&#8217;s the reality we have to deal with for client-side scripting. Luckily, Google Reader markup doesn&#8217;t change very often. For people new to object-oriented Javascript, this is one way to create a &#8220;class&#8221; (prototype) and put &#8220;instance&#8221; methods on a &#8220;class&#8221;.</p>
+
+<h3>Background.html</h3>
+
+<p>Unlike content scripts, which is injected and runs in the target page, the background page runs in its own process (the extension&#8217;s process) and keeps running while the extension is active. It&#8217;s comparable to the &#8220;server&#8221; side of the extension. For our extension&#8217;s purpose, we&#8217;re using the background script to make requests to 3rd party web sites (DZone).</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;html&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span> <span class="na">src=</span><span class="s">&quot;lib/jquery-1.6.4.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script&gt;</span>
+</span><span class='line'>    <span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">chrome</span><span class="p">.</span><span class="nx">extension</span><span class="p">.</span><span class="nx">onRequest</span><span class="p">.</span><span class="nx">addListener</span><span class="p">(</span>
+</span><span class='line'>            <span class="kd">function</span><span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">sender</span><span class="p">,</span> <span class="nx">sendResponse</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">if</span> <span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;fetch_entry&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                    <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                        <span class="nx">sendResponse</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="o">:</span><span class="nx">data</span><span class="p">});</span>
+</span><span class='line'>                    <span class="p">});</span>
+</span><span class='line'>                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;open_tab&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>                    <span class="nx">chrome</span><span class="p">.</span><span class="nx">tabs</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="s1">&#39;url&#39;</span><span class="o">:</span><span class="nx">request</span><span class="p">.</span><span class="nx">url</span><span class="p">});</span>
+</span><span class='line'>                    <span class="nx">sendResponse</span><span class="p">({</span><span class="s2">&quot;status&quot;</span><span class="o">:</span><span class="s2">&quot;ok&quot;</span><span class="p">});</span>
+</span><span class='line'>                <span class="p">}</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">);</span>
+</span><span class='line'>    <span class="p">})(</span><span class="nx">jQuery</span><span class="p">);</span>
+</span><span class='line'><span class="nt">&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We register handlers for events that our &#8220;client&#8221; (the content script) is able to raise. Here we deal with 2 kinds of events: fetch_entry and open_tab.</p>
+
+<ul>
+<li>Although Chrome 13 allows cross-site requests from content scripts, I&#8217;m actually quite fond of this pattern of delegating requests to the background page.</li>
+<li>chrome.tabs isn&#8217;t accessible in the content script. That&#8217;s why open_tab is an event the client (the content script) can raise and delegate chrome specific API calls to the background script.</li>
+</ul>
+
+
+<h2>After Thoughts</h2>
+
+<p>That&#8217;s it! That&#8217;s my first Chrome extension. It&#8217;s not earth shattering or anything but I learned quite a lot. I like Chrome extension development &#8211; it&#8217;s straightforward and simple. The architecture is quite simple yet powerful. The code is on <a href="https://github.com/kevinjqiu/greader">Github</a> and I plan to expand it to a framework for customizing Google Reader experience. Here are a few things we can do with the extension:</p>
+
+<ul>
+<li>Link &#8220;Share&#8221; action to twitter/Google+</li>
+<li>Click on &#8220;Like&#8221; action to automatically vote up on DZone (or any other news aggregator)</li>
+<li>Share with comment on Google Reader puts the comment on the entry on DZone (or any other news aggregator)</li>
+<li>endless opportunities&#8230;</li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-10-04T20:14:00-04:00" pubdate data-updated="true">Oct 4<span>th</span>, 2011</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/chrome/'>chrome</a>, <a class='category' href='/blog/categories/extension-/'>extension,</a>, <a class='category' href='/blog/categories/google/'>google</a>, <a class='category' href='/blog/categories/javascript-/'>javascript,</a>, <a class='category' href='/blog/categories/reader/'>reader</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2011/04/20/spectrum-dot-vim-my-first-vim-plugin/" title="Previous Post: Spectrum.vim - My first Vim plugin">&laquo; Spectrum.vim - My first Vim plugin</a>
+      
+      
+        <a class="basic-alignment right" href="/2012/03/03/writing-a-simple-clojure-library/" title="Next Post: Writing a Simple Clojure Library">Writing a Simple Clojure Library &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/';
+        var disqus_url = 'http://kevinjqiu.github.com/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

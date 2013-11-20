@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: scala | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/scala/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[My impression on Scala so far]]></title>
+    <link href="http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/"/>
+    <updated>2010-10-07T20:01:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far</id>
+    <content type="html"><![CDATA[<p>I've been exploring Scala on and off for some time now. Here's my highly subjective and very limited impression of Scala.</p>
+
+<p>What I like about Scala:</p>
+
+<h2>0) It's statically-typed language.</h2>
+
+<p>That's right! I don't care what you ninjas say. As much as I love dynamic languages, I just prefer statically typed language for big projects. The benefit of having type information is enormous for a project with a large code base. I know you have to write unit tests for it anyways, but when 80% of your unit test code is checking types, it's just counter-productive.</p>
+
+<h2>1) The ability to combine functional programming style with OOP.</h2>
+
+<p>This is what Scala is known for - a hybrid language that boasts the better in both OOP world and FP world. I'm not a functional programming purist, but I think Scala did a good job blending the functional programming elements into OOP. Writing Scala programs, I find myself much more empowered to be able to choose from both styles where I see fit. The ability to pass functions around and apply high order functions can significantly reduce boilerplate code and visual clutter.</p>
+
+<h2>2) The ability to create your own control flow (well, sort of).</h2>
+
+<p>I had a <a href="http://reminiscential.wordpress.com/2010/09/29/scala-use-function-currying/">blog post</a> about how to use function curry to create a customized control flow. This is very empowering and yet, it's not an one-off syntactic sugar that's sprinkled randomly into the language like some other language would do. Customization of control flow is a result of combining generic language features (such as currying, by-name parameter, implicit conversion, etc).</p>
+
+<h2>3) Object instead of static</h2>
+
+<p>Scala does away with the Java static keyword. Instead, it provides "object" keyword to define a class that only has one instance. It has the same power as singleton design pattern, without the extra boilerplate code. (if you think implementing singleton in Java is simple, think again. Especially in the multi-threaded context). Also, you can use the same construct to define "companion" objects, which can be used to implement the factory pattern, and put in miscellaneous methods, implicit conversion methods and so on. Extremely powerful yet elegant.</p>
+
+<h2>4) Operator overloading (well, sort of).</h2>
+
+<p>OK, it's not exactly operator overloading - Scala allows many non-alpha-numeric characters in the method name, so operators are essentially methods. duh! if you think about it...why should + be treated any different from <code>add()</code>? Being able to use special characters in method names makes code easy to understand. However, I'm a bit disappointed that question mark <code>?</code> cannot be used in method names...One of the things I liked about LISP is you can define a function <code>(odd? (x) (...))</code> and readers immediately know this function returns a boolean. I don't have to ponder whether I should name it <code>isOdd()</code> or <code>hasChildren()</code>. Anyway...</p>
+
+<h2>5) Traits</h2>
+
+<p>In most cases, multiple inheritance is manageable. Seems Java threw the baby out with the bath water - rejecting multiple inheritance completely. It's ironic that the AOP guys cracks open Java classes in the byte code level to do the "mixins"...With Scala, this seems to be natural.</p>
+
+<h2>6) Built-in parser-combinator library</h2>
+
+<p>It's easy to do some non-mission critical parsing using the Scala standard library. The library itself is implemented as an internal DSL such that writing parser rules feels like writing EBNF directly.</p>
+
+<p>Here's what's not so hot for me so far:</p>
+
+<h2>1) The generics still is obtrusive sometimes.</h2>
+
+<p>That said, however, it's vastly superior than Java's generics system with far better type inferencing. But sometimes, you still have to write down a lot of types especially on a parameterized method. What's worse is because Scala is more strict than Java wrt types, you cannot ignore generic types the way you can in Java code. Moreover, because Scala runs on JVM, and because of type-erasure, you still can't write code such as val t = new T()...although we can't blame this on Scala.</p>
+
+<h2>2) The collection library.</h2>
+
+<p>For each collection data structure, Scala has the mutable implementation, immutable implementation, and the native Java Collection Library. If you're writing code that calls Java library, very often you have to wrap JCL lists/maps/sets into the Scala ones, because you want to use the nice functional features Scala provides. I'm not smart enough to know a better solution to this, I'm just merely pointing out a sore spot. Clojure has a very clever and elegant way of integrating JCL data structures into Clojure code, but since Clojure and Scala are vastly different, I don't know how relevant this is.</p>
+
+<h2>3) Start up time</h2>
+
+<p>One of Scala's goal is to be able to both scale up and scale down. Scala programs can be run as scripts by the interpreter, but it can't compete with Python or Ruby in terms of development turn-around time in terms of scripting. Again, this is because of the dreadful JVM startup process.</p>
+
+<h2>4) Lack of good tooling</h2>
+
+<p>The best Scala development environment I found so far is the Scala plugin for IntelliJ. It's still not great for debugging, but for coding and integration with Maven and such, it's great. The Eclipse plugin lags significantly, despite having built a brand new website and seemingly having more resource pour into it...I know I shouldn't be overly critical of a community effort, but it's just frustrating that it can't even do auto import of classes...</p>
+
+<p>Overall, I think Scala really has the potential to become a big name in the programming language landscape. It can do everything Java can and does better. It has so much features that Java doesn't dare to add to keep backward compatibility or keep the language dead simple or politics or whatever reason...</p>
+
+<p>Scala is not a hype, but in order to be adopted more rapidly, I think it needs to</p>
+
+<ol>
+<li><p>Stablize the language and core library.</p></li>
+<li><p>Tooling, tooling, tooling! Seriously.</p></li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Use function currying to reduce repetition and make code clean]]></title>
+    <link href="http://kevinjqiu.github.com/2010/09/29/use-function-currying-to-reduce-repetition-and-make-code-clean/"/>
+    <updated>2010-09-29T19:56:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/09/29/use-function-currying-to-reduce-repetition-and-make-code-clean</id>
+    <content type="html"><![CDATA[<p>Lately, I've been writing a parser using the Scala parser-combinator framework to parse some saves from a game. As a responsible programmer (:P), I write unit tests for each rule. However, I found myself having to write the following code over and over again:</p>
+
+<p>```scala
+@Test
+def testRule1() {
+  parserRule.apply(new CharSequence("someInput")) match {</p>
+
+<pre><code>case Success(result, _) =&gt; {
+  assertEquals("expected", result)
+  /* other asserts if the result is a collection of something else */
+  }
+case NoSuccess(msg, _) =&gt; fail(msg)
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>It's worth noting that you cannot pass in a string value to a <code>Parser</code>. A parser expects a <code>CharSequence</code> <code>CharSequenceReader</code> object. Luckily, with Scala, you can define implicit conversion to turn a string into a <code>CharSequence</code> <code>CharSequenceReader</code>:</p>
+
+<p><code>scala
+implicit def str2charSeqReader(v:String) = new CharSequenceReader(v)
+</code></p>
+
+<p>Another goody Scala offers is that <code>obj.apply(arg)</code> method can be invoked by <code>obj(arg)</code>, so the above code becomes:</p>
+
+<p><code>scala
+/* ... */
+parserRule("someInput") match {
+/* ... */
+}
+</code></p>
+
+<p>It's much cleaner.</p>
+
+<p>However, the matching part is not clean still. It's not that bad for a single test case, but it's hardly a good practice to copy/paste it all over the test code base. We need to refactor this. The first thing comes to mind is to extract the matching part into a separate method, and let the caller provide the assertion part. Because Scala is a functional language, we can declare the method takes a function as a parameter, instead of using the delegate pattern, creating another class to encapsulate the method to be called, as you would do in Java:</p>
+
+<p>```scala
+def tryMatch<a href="pr:ParseResult[T],%20f:(T">T</a>=>Unit) {
+  pr match {</p>
+
+<pre><code>case Success(r, _) =&gt; f(r)
+case NoSuccess(msg, _) =&gt; fail(msg)
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>Now the consumer (the test code) looks like this:</p>
+
+<p><code>scala
+@Test
+def test1() {
+  tryMatch(rule1("input"), (result)=&gt;{assertEquals("expected",result)})
+}
+</code></p>
+
+<p>It's better, except that when you have multiple assert* methods need to be called, it quickly becomes ugly:</p>
+
+<p><code>scala
+@Test
+def test2() {
+  tryMatch(listRule("1,2,3,4"), (result)=&gt;{assertEquals(1,result(0));assertEquals(2,result(1));assertEquals(3,result(2));assertEquals(4,result(3))})
+}
+</code></p>
+
+<p>To do better, we can use <a href="http://en.wikipedia.org/wiki/Currying">function currying</a>. I read about function currying before, but not until now did it dawn on me that I can use this technique to make my code look cleaner. Basically, currying means that a function with n parameters is the same as the function being applied one parameter at a time in succession. e.g., function <code>add(x1:Int,x2:Int,...,xn:Int)</code> adds all its parameters. <code>add(1,2)=[add(1)](2)</code>, where <code>add(1)</code> becomes a partially applied function that takes an integer and returns an integer. Then the partial function is applied to the second parameter which gives the eventual result.</p>
+
+<p>This is all very theoretical, but the practical implication is that we can transform <code>tryMatch()</code> method shown above from a method with 2 parameters into a curried function. Why? Because with Scala, when you have a method that only takes a single parameter (as is the case with the partially applied function), you can replace parentheses with curly brackets! Let's see how it works:</p>
+
+<p>```scala
+def tryMatch<a href="pr:ParseResult[T]">T</a>(f:(T)=>Unit) {
+  pr match {</p>
+
+<pre><code>case Success(r, _) =&gt; f(r)
+case NoSuccess(msg, _) =&gt; fail(msg)
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>Basically, we break the two parameter definitions. This creates a PartialFunction in Scala. No other code needs to be changed at all. Now we can call tryMatch like this:</p>
+
+<p>```scala
+@Test
+def testList() {
+  tryMatch(listRule("1 2 3")) {</p>
+
+<pre><code>result =&gt; {
+  assertEquals(1, result(0))
+  assertEquals(2, result(1))
+  assertEquals(3, result(2))
+}
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>This is like creating your own control flow (like try-catch-finally). Ain't that neat?</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Finding Happy Numbers using Scala]]></title>
+    <link href="http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/"/>
+    <updated>2010-07-23T19:48:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala</id>
+    <content type="html"><![CDATA[<p>The problem was posted on <a href="http://programmingpraxis.com/2010/07/23/happy-numbers/">Programming Praxis</a>. The algorithm itself is pretty straightforward, anyone can do it with a few if/else/fors, but to coerce myself to think functionally, I decide to practice writing it in <a href="http://www.scala-lang.org">Scala</a>.</p>
+
+<p>A number is a happy number if the sum of square of its digits eventually arrive at 1. For example, 7=&gt;7<sup>2</sup>=49=&gt;4<sup>2</sup>+9<sup>2</sup>=97=&gt;9<sup>2</sup>+7<sup>2</sup>=&gt;130=1<sup>2</sup>+3<sup>2</sup>+0<sup>2</sup>=10=&gt;1<sup>2</sup>+0<sup>2</sup>=1, so 7 is a happy number. 17 is not a happy number because by applying the above process, it goes into a loop.</p>
+
+<p>Step1: calculating the sum of squares of a number</p>
+
+<p>To get a list of numbers from a given number, we can first convert the number into a string, and then map every character of the string to its corresponding integer value. A more mathematical way is to divide the number continually by 10 until the original number becomes 0, adding the remainder to a list each time...The first method is easier to visualize, so here it goes:
+<code>n.toString.toCharArray.map{digit=&gt;Integer.valueOf(""+digit)}</code></p>
+
+<p>It's quite wordy but I've yet to find a better way. I'm pretty sure there is so if you know, do inform me.</p>
+
+<p>Now I need to square each item in the list. So modify the above statement:
+<code>n.toString.toCharArray.map{digit=&amp;gt;Math.pow(Integer.valueOf(""+digit).doubleValue,2.0)}</code></p>
+
+<p>One thing bothers me is that I have to explicitly call <code>someInt.doubleValue</code>...I thought Scala does the implicit conversion for me? Then I realized <code>Integer.valueOf(...)</code> gives me <code>java.lang.Integer</code>, not <code>scala.lang.Int</code>. So I have to write a implicit conversion function myself:</p>
+
+<p><code>scala
+implicit def integer2double(i:Integer):Double = i.doubleValue
+</code></p>
+
+<p>Now I can get rid of the hideous <code>someInt.doubleValue</code>.</p>
+
+<p>Since we're doing implicit conversion already, why not just implicitly convert a numeric character to a double so that it can be accepted by <code>Math.pow</code>?</p>
+
+<p><code>scala
+implicit def char2double(ch:Char):Double = Integer.valueOf("" + ch).doubleValue
+</code></p>
+
+<p>Now the code can be shortened to</p>
+
+<p><code>scala
+n.toString.toCharArray.map { digit =&amp;gt; Math.pow(digit, 2) }
+</code></p>
+
+<p>Isn't that sweet? Implicit conversion is cool but it's easy to get carried away and do everything implicit, which makes the code hard to maintain, so there gotta be a balance somewhere. In the scope of this small exercise, I guess it's OK to use it.</p>
+
+<p>Now that we have the squares of individual digits in a list, we can calculate the sum by reducing or folding it:</p>
+
+<p><code>scala
+((n.toString.toCharArray.map { digit =&amp;gt; Math.pow(digit, 2) }).foldLeft(0.0) { _ + _ }).toInt
+</code></p>
+
+<p><code>{\_ + \_}</code> seems a lot like line noise. The underscore converts the statement into a closure. It's a shortcut for <code>(a,b)=&gt;a+b</code>. It's succinct yet should be used sparingly.</p>
+
+<p>Step2:return</p>
+
+<p>lol, yeah, no extra fluff is needed. We can capture the constraints in one return statement, but before that, I need to decide on what states I need to carry on from each recursive step. (You know I'm going to use recursion, don't you? :P)</p>
+
+<p>There are a couple of states involved:
+1. the limit. It's the number of steps we allow before the final "1" is reached. It took number seven 5 steps to reach 1. This variable is the cut-off: if the given number can't reach 1 before the limit, it's considered unhappy (return <code>false</code>)
+2. the current number of steps
+3. the set of numbers already appeared. In the case of seven, the set is <code>{49 97 130 10}</code>. This set is used to determine if the calculations fall into a loop. If the current calculated number appears in this set, the original number is unhappy.</p>
+
+<p>So here's our method:</p>
+
+<p><code>scala
+def isHappyNumber(n:Int, limit:Int, numOfTries:Int, alreadySeen:Set[Int]):Boolean = {
+val sos = ((n.toString.toCharArray.map { digit =&amp;gt; Math.pow(digit, 2) }).foldLeft(0.0) { _ + _ }).toInt
+return sos == 1 ? true : (!alreadySeen.contains(sos) &amp;amp;&amp;amp; numOfTries+1 &amp;lt;= limit &amp;amp;&amp;amp; isHappyNumber(sos, limit, numOfTries+1, alreadySeen+sos))
+}
+</code></p>
+
+<p>The second line basically says: when <code>sos</code> (sum of squares) is 1, return <code>true</code>, otherwise, is the number already in the set of numbers seen during the calculation?, if not, does the number of calculation exceed the limit? if not, repeat the calculation, with sos being the "original" number, increase the counter and put sos in the <code>alreadySeen</code> set.</p>
+
+<p>Note that this is a <a href="http://en.wikipedia.org/wiki/Tail_recursion">Tail recursion</a> function, we can add <code>@tailrec</code> annotation to the method to let the compiler optimize it - turn the recursion into a loop so that it won't grow in stack.</p>
+
+<p>Now that we've had the body of the function, we can write an overload method that provides initial values:</p>
+
+<p><code>scala
+def isHappyNumber(n:Int):Boolean = isHappyNumber(n, 10, 0, Set[Int]())
+</code></p>
+
+<p>To find all happy numbers between 1 and 100:
+<code>scala
+println (1 to 100 filter { isHappyNumber(_) })
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

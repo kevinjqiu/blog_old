@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: clojure, | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/clojure-/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Write sudoku solver in Clojure]]></title>
+    <link href="http://kevinjqiu.github.com/2011/03/02/write-sudoku-solver-in-clojure/"/>
+    <updated>2011-03-02T20:00:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2011/03/02/write-sudoku-solver-in-clojure</id>
+    <content type="html"><![CDATA[<p>...yeah, because the world just needs another <a href="http://en.wikipedia.org/wiki/Sudoku">Sudoku</a> solver. Well, I'm not trying to solve world hunger with it, but just an attempt to practice <a href="http://clojure.org">clojure</a>, I took (read: stole) Peter Norvig's <a href="http://norvig.com/sudoku.html">sudoku solver</a> algorithm (written in Python) and adapted it into Clojure. I put it up on Github under <a href="https://github.com/kevinjqiu/sudoku-clj">sudoku-clj</a>. The algorithm itself isn't <em>that</em> hard to understand. The porting to a lisp-y syntax made the code a little longer than its Python counterpart. I'm sure seasoned Lisp/Clojure users can point out dozens of places where more idiomatic/succinct syntax can be used (If you happen to be one, do tell, by the way).</p>
+
+<p>Here's a few things I noticed:</p>
+
+<ul>
+<li><p>Mutable states in clojure are captured using <code>ref</code>s. The object itself (in this case, the grid, which is a hash map) doesn't mutate, but the reference is changed to point to different grid objects that represent a configuration at a given step.</p></li>
+<li><p>Clojure sequences are Lazy. A few times I tried to print out the current state (remaining digits) of the square, but if you simply do <code>(println seq)</code>, you will get a Java-ish <code>toString()</code> output of the sequence object. You need to force the lazy sequence to be evaluated by <code>(println (apply str seq))</code>. Needless to say, you lose the advantage of lazy sequences, so use it sparingly.</p></li>
+<li><p>Python's list comprehension syntax is fabulous. Clojure's counterpart for comprehension doesn't feel as elegent, nor is map a function onto a sequence to achieve that (the way I used it)</p></li>
+<li><p><a href="/2011/02/11/cake-the-yummy-clojure-build-system/">Cake</a> is yummy!</p></li>
+<li><p>The performance isn't great...I must have done something wrong, but the easy sudoku grid took about 2 seconds (with the JVM already booted), while the Python algorithm solves it in a fraction of a second.</p></li>
+<li><p>Because assign/eliminate are mutually recursive, my current implementation uses the naive way of doing recursion, i.e., let the stack grow. Clojure has a function <code>trampoline</code>, which adds a level of indirection that applies to mutually recursive functions. It uses <code>recur</code> at tail end position (basically translates the recursive calls into loops) which doesn't fill your process's stack. It might not be obvious (to me anyways) how one can do that with a few levels of function calls in between assign/eliminate, but I'm sure there's a way</p></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,22 @@
+<div class="highlight"><pre><span class="kd">var</span> <span class="nx">EntryAction</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">element</span> <span class="o">=</span> <span class="nx">element</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">entryElmt</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">parent</span><span class="p">(</span><span class="s2">&quot;.entry&quot;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">$</span><span class="p">(</span><span class="nx">entryElmt</span><span class="p">).</span><span class="nx">find</span><span class="p">(</span><span class="s2">&quot;.entry-title-link&quot;</span><span class="p">).</span><span class="nx">attr</span><span class="p">(</span><span class="s1">&#39;href&#39;</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">entry</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span> <span class="o">:</span> <span class="nx">url</span>
+    <span class="p">};</span>
+<span class="p">};</span>
+
+<span class="nx">EntryAction</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">addAction</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">that</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">onclick</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">actionFunc</span> <span class="o">=</span> <span class="nx">action</span><span class="p">[</span><span class="s1">&#39;fn&#39;</span><span class="p">];</span>
+        <span class="nx">actionFunc</span><span class="p">(</span><span class="nx">that</span><span class="p">.</span><span class="nx">entry</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">element</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s2">&quot;&lt;span&gt;&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">addClass</span><span class="p">(</span><span class="s2">&quot;link unselectable&quot;</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">text</span><span class="p">(</span><span class="nx">action</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+        <span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">onclick</span><span class="p">));</span>
+<span class="p">};</span>
+</pre></div>

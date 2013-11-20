@@ -1,0 +1,577 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Building a GAE+GWT application using the best practices (Part 4) - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="Building a GAE+GWT application using the best practices series Part 1
+Part 2
+Part 3
+Part 4
+Part 5 In the last blog post, we went over how to write &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Building a GAE+GWT Application Using the Best Practices (Part 4)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-03T13:15:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li>Part 4</li>
+<li><a href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">Part 5</a></li>
+</ol>
+
+
+<p>In the last blog post, we went over how to write GWT-RPC handlers using GWT-dispatch and dependency injection (Guice). This section, we&#8217;re going to see how the client side is set up.</p>
+
+<h2>Dependencies</h2>
+
+<p>We need the following dependencies
+* <a href="http://code.google.com/p/google-gin/">Gin</a>
+* <a href="http://code.google.com/p/gwt-dispatch/">GWT-dispatch</a>
+* <a href="http://code.google.com/p/gwt-presenter/">GWT-presenter</a>
+* <a href="http://code.google.com/p/gwt-log/">GWT-log</a></p>
+
+<p>They need to be on the classpath when you compile your GWT code, but not under the war directory like the server dependencies need to be.</p>
+
+<h2>Module definition</h2>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/screenshot1.png"><img src="http://reminiscential.files.wordpress.com/2010/03/screenshot1.png?w=200" alt="" title="Screenshot" width="200" height="300" class="aligncenter size-medium wp-image-172" /></a></p>
+
+<p>The first step is to declare the inherited GWT modules in the module XML file:
+RateChecker.gwt.xml</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+</span><span class='line'><span class="nt">&lt;module</span> <span class="na">rename-to=</span><span class="s">&quot;ratechecker&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;com.google.gwt.user.User&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;com.google.gwt.inject.Inject&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;net.customware.gwt.dispatch.Dispatch&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;net.customware.gwt.presenter.Presenter&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;com.allen_sauer.gwt.log.gwt-log-DEBUG&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;inherits</span> <span class="na">name=</span><span class="s">&quot;com.google.gwt.user.theme.chrome.Chrome&quot;</span><span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;entry-point</span> <span class="na">class=</span><span class="s">&quot;ratechecker.client.RateChecker&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;source</span> <span class="na">path=</span><span class="s">&quot;client&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;source</span> <span class="na">path=</span><span class="s">&quot;shared&quot;</span> <span class="nt">/&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;/module&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we specify the explicitly the packages need to be included for compiling - &#8220;client&#8221; and &#8220;shared&#8221;. If not specified, GWT will by default compile every source file under the client package.</p>
+
+<h2>Create a Gin Module</h2>
+
+<p>Gin and Guice implements the same API (or rather, Gin has the same interface as Guice), but Gin uses GWT deferred binding &#8220;magic&#8221;. Similar to what we have on the server side, on the client side, we start by defining our module:
+RateCheckerClientModule:</p>
+
+<figure class='code'><figcaption><span>RateCheckerClientModule.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">RateCheckerClientModule</span> <span class="kd">extends</span> <span class="n">AbstractPresenterModule</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">RateCheckerClientModule</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">bind</span><span class="o">(</span><span class="n">EventBus</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">DefaultEventBus</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">in</span><span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">bind</span><span class="o">(</span><span class="n">PlaceManager</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">in</span><span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To start up, we bind EventBus and PlaceManager in the singleton scope. They&#8217;re both provided by GWT-mvp library.</p>
+
+<h2>AppPresenter</h2>
+
+<p>There are different ways to facilitate the MVP pattern but the way I find the most convenient is to have an AppPresenter manage all subsequent presenters. The view the AppPresenter represents is the RootPanel of GWT.</p>
+
+<figure class='code'><figcaption><span>AppPresenter.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AppPresenter</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">HasWidgets</span> <span class="n">_container</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">MainPresenter</span> <span class="n">_mainPresenter</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Inject</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">AppPresenter</span><span class="o">(</span><span class="kd">final</span> <span class="n">MainPresenter</span> <span class="n">mainPresenter</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_mainPresenter</span> <span class="o">=</span> <span class="n">mainPresenter</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">_mainPresenter</span><span class="o">.</span><span class="na">bind</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">go</span><span class="o">(</span><span class="kd">final</span> <span class="n">HasWidgets</span> <span class="n">container</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_container</span> <span class="o">=</span> <span class="n">container</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">_container</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">_container</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">_mainPresenter</span><span class="o">.</span><span class="na">getDisplay</span><span class="o">().</span><span class="na">asWidget</span><span class="o">());</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here, MainPresenter is the actual UI. The go() method of AppPresenter is for the module entry point to call when the module first initializes. We need to add the bindings to the client module:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'>    <span class="o">...</span>
+</span><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">configure</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">bind</span><span class="o">(</span><span class="n">EventBus</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">DefaultEventBus</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">in</span><span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">bind</span><span class="o">(</span><span class="n">PlaceManager</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">in</span><span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">bind</span><span class="o">(</span><span class="n">ILog</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">to</span><span class="o">(</span><span class="n">GwtLogAdapter</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">in</span><span class="o">(</span><span class="n">Singleton</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">bind</span><span class="o">(</span><span class="n">AppPresenter</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">bindPresenter</span><span class="o">(</span><span class="n">MainPresenter</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MainPresenter</span><span class="o">.</span><span class="na">Display</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">MainView</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>    <span class="o">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we specify the explicitly the packages need to be included for compiling - &#8220;client&#8221; and &#8220;shared&#8221;. If not specified, GWT will by default compile every source file under the client package.</p>
+
+<h2>Ginjector</h2>
+
+<p>Similar to &#8220;Injector&#8221; interface on the server side, the client side needs to define a Ginjector that act as a gateway for Gin managed object instances.</p>
+
+<figure class='code'><figcaption><span>RateCheckerGinjector.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="nd">@GinModules</span><span class="o">({</span><span class="n">RateCheckerClientModule</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">ClientDispatchModule</span><span class="o">.</span><span class="na">class</span><span class="o">})</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">RateCheckerGinjector</span> <span class="kd">extends</span> <span class="n">Ginjector</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">AppPresenter</span> <span class="nf">getAppPresenter</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here the annotation <code>@GinModules({...})</code> makes the instances managed by <code>RateCheckerClientModule</code> and <code>ClientDispatchModule</code> available for the ginjector. ClientDispatchModule binds DispatchAsync interface, which is what we will use to interface with the web service methods.</p>
+
+<h2>Entry Point</h2>
+
+<p>Finally, here&#8217;s the module entry point:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * Entry point classes define &lt;code&gt;onModuleLoad()&lt;/code&gt;.</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">RateChecker</span> <span class="kd">implements</span> <span class="n">EntryPoint</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">RateCheckerGinjector</span> <span class="n">_injector</span> <span class="o">=</span> <span class="n">GWT</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">RateCheckerGinjector</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onModuleLoad</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">AppPresenter</span> <span class="n">appPresenter</span> <span class="o">=</span> <span class="n">_injector</span><span class="o">.</span><span class="na">getAppPresenter</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">appPresenter</span><span class="o">.</span><span class="na">go</span><span class="o">(</span><span class="n">RootPanel</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;root&quot;</span><span class="o">));</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>GWT.create(...)</code> statement here creates the ginjector at runtime. Behind the scene, it generates a class (by the name of something like RateCheckerGinjector_Impl) that contains the code to instantiate the bound classes, and when Gin sees a @Inject annotation on a class&#8217;s constructor, it provides the instances with the correct scope from the dependency injection container (Ginjector) to the constructor so that the said class can be instantiated.</p>
+
+<p>The onModuleLoad() method doesn&#8217;t do much. It simple binds the appPresenter with the RootPanel where the app&#8217;s UI is going to be displayed.</p>
+
+<p>I know a lot of the concrete UI creation has been left out of this post, but hopefully it will become clearer once the next post is in.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-03T13:15:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gae/'>gae</a>, <a class='category' href='/blog/categories/gwt-/'>gwt,</a>, <a class='category' href='/blog/categories/java-/'>java,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/" title="Previous Post: Building a GAE+GWT application using the best practices (Part 3)">&laquo; Building a GAE+GWT application using the best practices (Part 3)</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/" title="Next Post: Building a GAE+GWT application using the best practices (Part 5)">Building a GAE+GWT application using the best practices (Part 5) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="p">(</span><span class="kd">defn </span><span class="nv">-main</span>
+  <span class="s">&quot;A simple test case entry point&quot;</span>
+  <span class="p">[]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">square</span> <span class="p">(</span><span class="nf">polybius-square</span> <span class="s">&quot;ABCDEFGHIKLMNOPQRSTUVWXYZ&quot;</span> <span class="mi">5</span><span class="p">)]</span>
+    <span class="p">(</span><span class="k">do </span><span class="p">(</span><span class="nb">println </span><span class="p">(</span><span class="nf">encode</span> <span class="s">&quot;BIFIDCIPHER&quot;</span> <span class="nv">square</span><span class="p">))</span>
+      <span class="p">(</span><span class="nb">println </span><span class="p">(</span><span class="nf">decode</span> <span class="p">(</span><span class="nf">encode</span> <span class="s">&quot;BIFIDCIPHER&quot;</span> <span class="nv">square</span><span class="p">)</span> <span class="nv">square</span><span class="p">)))))</span>
+</pre></div>

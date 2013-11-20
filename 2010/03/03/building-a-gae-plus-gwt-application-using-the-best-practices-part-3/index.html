@@ -1,0 +1,670 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Building a GAE+GWT application using the best practices (Part 3) - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="Building a GAE+GWT application using the best practices series Part 1
+Part 2
+Part 3
+Part 4
+Part 5 In this part of the series, we&#8217;re going to &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Building a GAE+GWT Application Using the Best Practices (Part 3)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-03T01:02:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li>Part 3</li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">Part 4</a></li>
+<li><a href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">Part 5</a></li>
+</ol>
+
+
+<p>In this part of the series, we&#8217;re going to explore the designing of the web services for RateChecker and coding them using the command pattern from <a href="http://code.google.com/p/gwt-dispatch/">GWT-dispatch</a> based on Ray Ryan&#8217;s <a href="http://www.youtube.com/watch?v=PDuhR18-EdM">presentation</a>.</p>
+
+<h2>The big picture</h2>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/classdiagram.png"><img class="aligncenter size-medium wp-image-166" title="ClassDiagram" src="http://reminiscential.files.wordpress.com/2010/03/classdiagram.png?w=300" alt="" width="300" height="272" /></a></p>
+
+<p>To correctly implement web services using the command pattern, we first have to get the big picture. There are three &#8220;actors&#8221; involved in this: an action, a result and a handler.</p>
+
+<h3>Action</h3>
+
+<p>An action is used to store the parameters of the web service call (if any). For instance, a CheckRate action needs to know what type of rate the user is checking: buying rate? selling rate? currency?</p>
+
+<h3>Result</h3>
+
+<p>A result object stores the result (duh&#8230;) of the web service call. In the case of CheckRate method, the result is the rate object containing the details of the rate.</p>
+
+<h3>Handler</h3>
+
+<p>A handler is the actual &#8220;worker&#8221; that actually does the work of checking the rate. In this case, the check rate method fetches the posted rate page , parses the text (if needed) to get the rate information.</p>
+
+<h3>Dispatch and DispatchAsync</h3>
+
+<p>A Handler is executed on the server side (by the DispatchServlet we saw in the last post). On the client side, there&#8217;s a counterpart &#8220;DispatchAsync&#8221;, which is the asynchronous interface that the client code calls.</p>
+
+<h2>Implementing web service methods</h2>
+
+<p>Now that we have the big picture in place, we&#8217;re going to look into how to actually implement them.
+The first step is to define a domain model. In this case, it&#8217;s our Rate class:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="nd">@PersistenceCapable</span><span class="o">(</span><span class="n">identityType</span><span class="o">=</span><span class="n">IdentityType</span><span class="o">.</span><span class="na">APPLICATION</span><span class="o">)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Rate</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4415279469780082174L</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@PrimaryKey</span>
+</span><span class='line'>    <span class="nd">@Persistent</span><span class="o">(</span><span class="n">valueStrategy</span><span class="o">=</span><span class="n">IdGeneratorStrategy</span><span class="o">.</span><span class="na">IDENTITY</span><span class="o">)</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">Long</span> <span class="n">id</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Persistent</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">RateType</span> <span class="n">type</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Persistent</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">Date</span> <span class="n">timeFetched</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Persistent</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">Double</span> <span class="n">rate</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">Rate</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="c1">// ... getters and setters omitted</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">enum</span> <span class="n">RateType</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">Selling</span><span class="o">,</span>
+</span><span class='line'>    <span class="n">Buying</span><span class="o">,</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In our example application, we are going to define three simple web methods:</p>
+
+<ul>
+<li>Check rate: use Url fetch to get the posted rate page and return a rate object from that.</li>
+<li>Save rate: persist the rate object into the data store.</li>
+<li>Get rate: get the rates from the data store.</li>
+</ul>
+
+
+<h3>Check rate</h3>
+
+<p>As we have shown in the big picture, every action needs three pieces: action, result (both in shared package, as they will be used by both the client and the server) and the handler (lives in the server package).</p>
+
+<p>For CheckRate action, we need to specify the type of rate it needs to check. For simplicity, I&#8217;m always dealing with USD/CAD rate. The parameter here is only for whether to check for buying rate or selling rate.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CheckRate</span> <span class="kd">implements</span> <span class="n">Action</span><span class="o">&lt;</span><span class="n">CheckRateResult</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1716760883016361503L</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">RateType</span> <span class="n">_type</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">CheckRate</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">CheckRate</span><span class="o">(</span><span class="kd">final</span> <span class="n">RateType</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_type</span> <span class="o">=</span> <span class="n">type</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setType</span><span class="o">(</span><span class="kd">final</span> <span class="n">RateType</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_type</span> <span class="o">=</span> <span class="n">type</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">RateType</span> <span class="nf">getType</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">_type</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The result is designed to hold the returned Rate object.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CheckRateResult</span> <span class="kd">implements</span> <span class="n">Result</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9099789297842581458L</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">Rate</span> <span class="n">_rate</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">CheckRateResult</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">CheckRateResult</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_rate</span> <span class="o">=</span> <span class="n">rate</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setRate</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_rate</span> <span class="o">=</span> <span class="n">rate</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Rate</span> <span class="nf">getRate</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">_rate</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Word of caution: because both action and result are serialized and sent over the wire as part of GWT-RPC call, they are required to have a default public constructor.</p>
+
+<p>Now, on to the handler:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">CheckRateHandler</span> <span class="kd">implements</span> <span class="n">ActionHandler</span><span class="o">&lt;</span><span class="n">CheckRate</span><span class="o">,</span> <span class="n">CheckRateResult</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">URL_BUY</span> <span class="o">=</span> <span class="s">&quot;http://www.ingdirect.ca/en/datafiles/rates/usbuying.html&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">URL_SELL</span> <span class="o">=</span> <span class="s">&quot;http://www.ingdirect.ca/en/datafiles/rates/usselling.html&quot;</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">CheckRateHandler</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">CheckRateResult</span> <span class="nf">execute</span><span class="o">(</span><span class="kd">final</span> <span class="n">CheckRate</span> <span class="n">action</span><span class="o">,</span> <span class="kd">final</span> <span class="n">ExecutionContext</span> <span class="n">ctx</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ActionException</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">CheckRateResult</span> <span class="n">retval</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CheckRateResult</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">String</span> <span class="n">strUrl</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">switch</span> <span class="o">(</span><span class="n">action</span><span class="o">.</span><span class="na">getType</span><span class="o">())</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">case</span> <span class="nl">Buying:</span>
+</span><span class='line'>            <span class="n">strUrl</span> <span class="o">=</span> <span class="n">URL_BUY</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">break</span><span class="o">;</span>
+</span><span class='line'>        <span class="k">case</span> <span class="nl">Selling:</span>
+</span><span class='line'>            <span class="n">strUrl</span> <span class="o">=</span> <span class="n">URL_SELL</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">break</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="kd">final</span> <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="n">URL</span><span class="o">(</span><span class="n">strUrl</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="n">BufferedReader</span> <span class="n">br</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">br</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="n">InputStreamReader</span><span class="o">(</span><span class="n">url</span><span class="o">.</span><span class="na">openStream</span><span class="o">()));</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="kd">final</span> <span class="kt">double</span> <span class="n">dRate</span> <span class="o">=</span> <span class="n">Double</span><span class="o">.</span><span class="na">parseDouble</span><span class="o">(</span><span class="n">br</span><span class="o">.</span><span class="na">readLine</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Rate</span><span class="o">();</span>
+</span><span class='line'>                <span class="n">rate</span><span class="o">.</span><span class="na">setRate</span><span class="o">(</span><span class="n">dRate</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">rate</span><span class="o">.</span><span class="na">setType</span><span class="o">(</span><span class="n">action</span><span class="o">.</span><span class="na">getType</span><span class="o">());</span>
+</span><span class='line'>                <span class="n">rate</span><span class="o">.</span><span class="na">setTimeFetched</span><span class="o">(</span><span class="k">new</span> <span class="n">Date</span><span class="o">());</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="n">retval</span><span class="o">.</span><span class="na">setRate</span><span class="o">(</span><span class="n">rate</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>                <span class="k">if</span> <span class="o">(</span><span class="n">br</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class='line'>                    <span class="n">br</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="kd">final</span> <span class="n">MalformedURLException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ActionException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="kd">final</span> <span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ActionException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="kd">final</span> <span class="n">NumberFormatException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>            <span class="k">throw</span> <span class="k">new</span> <span class="nf">ActionException</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">retval</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="c1">// ... other methods omitted</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you can see, the handler does the actual work of fetching the rate using URL Fetch service offered by Google App Engine.</p>
+
+<p>The other two web method implementations are similar. You can follow the project on Github <a href="http://github.com/kevinjqiu/ratechecker">here</a>. In the next section, I&#8217;m going to go over the building of the UI in GWT, as well as making AJAX calls from GWT to the server.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-03T01:02:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gae-/'>gae,</a>, <a class='category' href='/blog/categories/gwt/'>gwt</a>, <a class='category' href='/blog/categories/java-/'>java,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/03/01/use-delegation-to-write-map-slash-filter-in-java/" title="Previous Post: Use delegation to write map/filter in Java">&laquo; Use delegation to write map/filter in Java</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/" title="Next Post: Building a GAE+GWT application using the best practices (Part 4)">Building a GAE+GWT application using the best practices (Part 4) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

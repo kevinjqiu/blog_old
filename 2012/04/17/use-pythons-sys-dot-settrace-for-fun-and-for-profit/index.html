@@ -1,0 +1,606 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Use Python's sys.settrace() for fun and for profit - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="The itch to scratch Everyone in the software industry knows Kent Beck, the pioneers of extreme programming and test-driven development and the co- &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Use Python's sys.settrace() for Fun and for Profit</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-17T16:58:00-04:00" pubdate data-updated="true">Apr 17<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>The itch to scratch</h2>
+
+<p>Everyone in the software industry knows Kent Beck, the pioneers of extreme programming and test-driven development and the co-author of JUnit. One of his lesser known project was <a href="http://junitmax.com">JUnitMax</a>, which aims to reduce the time developers have to wait while tests are running. One of the ideas behind that is that when code changes, only the test cases that exercise the code need to be run, instead of running the entire suite. The idea makes a lot of sense to me, but at the time, I (and the development shop I was in) wasn&#8217;t practising enough TDD, so unit test time wasn&#8217;t a big problem for me back then.</p>
+
+<p>Fast-forward a few years, now as the project in my current company gets bigger, the time it takes to run tests is slowly becoming an impeding factor of my productivity. I remembered JUnitMax and say to myself, wouldn&#8217;t it be neat if something like JUnitMax were available? As the name suggests, JUnitMax is for Java while my project is in Python. Java, being a statically-typed language, has the blessings of statical analysis, which means a tool like JUnitMax can figure out which test cases cover which lines of code simply by type analysis. Python, however, being a dynamic language, doesn&#8217;t have this ability.</p>
+
+<p>A few days ago, while I was running unit tests with coverage, it dawned on me that if the coverage tool knows which lines of the source code is covered by unit tests, couldn&#8217;t the same technique be used to figure out which lines are covered by which test cases?</p>
+
+<p>So, I started looking into <a href="http://nedbatchelder.com/code/coverage/">coveragepy</a>&#8217;s source code, and watching its author <a href="http://nedbatchelder.com/blog/">Ned Batchelder</a>&#8217;s excellent PyCon2011 <a href="http://blip.tv/pycon-us-videos-2009-2010-2011/pycon-2011-python-aware-python-4896752">video</a> on <code>sys.settrace</code>. I wanted to build a proof-of-concept tool that integrates with the de-facto Python unit-test tool <a href="https://github.com/nose-devs/nose">nose</a>, that, when run, gathers the information about which lines in the files in the source folder are covered by which test cases, and hence <a href="https://github.com/kevinjqiu/nostrils">nostrils</a> is born.</p>
+
+<h2>Here comes <code>sys.settrace()</code></h2>
+
+<p>Python&#8217;s motto is &#8220;batteries included&#8221;. This is manifested in many Python&#8217;s stanndard library modules, such as ast (source code parsing) and dis (bytecode disassembly). One of which is the ability to make the Python interpreter call an external function whenever a line of code is being executed. You can do a lot of fun stuff with it, for example, Coverage.py uses this to build code coverage data; pdb uses it to insert breakpoints into a running application and change the way a Python program is executed.</p>
+
+<h2>How can it be used?</h2>
+
+<p>For <em>nostrils</em>, we need to write a nose plugin that installs the trace function when a test is encountered. The trace function records the line numbers and the current test case name. After all tests are run, we have our map.</p>
+
+<h2>A simple use case</h2>
+
+<p>To start, we need a simple use case:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># worker.py</span>
+</span><span class='line'><span class="c"># this is the code-under-test</span>
+</span><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">z</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">subtract</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">z</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="c"># test_worker.py</span>
+</span><span class='line'><span class="c"># test cases</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="nn">worker</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">test_add</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="mi">1</span> <span class="o">==</span> <span class="n">worker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">test_add___negative</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="mi">0</span> <span class="o">==</span> <span class="n">worker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">test_subtract</span><span class="p">():</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="mi">0</span> <span class="o">==</span> <span class="n">worker</span><span class="o">.</span><span class="n">subtract</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">TestFoo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">test_add</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="k">assert</span> <span class="mi">5</span> <span class="o">==</span> <span class="n">worker</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>As you can see, we have 4 tests and 2 methods-under-test. Our goal is that when running <code>nosetests --with-nostrils</code> (<code>--with-nostrils</code> is the switch to turn on the nostrils plugin), we get the following mappings:</p>
+
+<figure class='code'><figcaption><span>worker.py</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="c"># test_add, test_add_negative, TestFoo.test_add</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">z</span>  <span class="c"># test_add, test_add_negative, TestFoo.test_add</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="nf">subtract</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">z</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span> <span class="c"># test_subtract</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">z</span>  <span class="c"># test_subtract</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Nose plugin</h2>
+
+<p>I won&#8217;t go into the details about how to create a plugin for nose. You can read it <a href="http://readthedocs.org/docs/nose/en/latest/plugins/writing.html,%20and%20you%20can%20take%20a%20look%20at%20my%20sample%20setup%20[here](https://raw.github.com/kevinjqiu/nostrils/master/setup.py">here</a>. In a nutshell, every plugin has a name, and when nose is supplied with &#8211;with-<em>plugin_name</em>, your plugin is activated. Nose provides a test lifecycle &#8220;hooks&#8221; that plugins can implement. For example, <code>startTest</code> is called when a test case is discovered and adapted into a nose <a href="http://readthedocs.org/docs/nose/en/latest/api/test_cases.html">TestCase</a>. <code>addSuccess</code> is called when a test case succeeded. <code>finalize</code> is called when all tests are finished.</p>
+
+<p>Here&#8217;s how my plugin looks like:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Nostrils</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;nostrils&#39;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">addError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_tracefn</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">addFailure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_tracefn</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">addSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">err</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_tracefn</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">addSuccess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">err</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_restore_tracefn</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">startTest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_current_test</span> <span class="o">=</span> <span class="n">test</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_install_tracefn</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">_install_tracefn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tracefn</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">gettrace</span><span class="p">()</span>
+</span><span class='line'>        <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trace</span><span class="p">)</span> <span class="c"># See below</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">_restore_tracefn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="n">sys</span><span class="o">.</span><span class="n">settrace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tracefn</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The idea is that we install the trace function when test starts, and restore the trace function back to what it was. We also keeps track of what&#8217;s the current test in <code>self._current_test</code>.</p>
+
+<h2>Trace function</h2>
+
+<p>Now let&#8217;s have a look at the trace function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Nostrils</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+</span><span class='line'>  <span class="c"># ...</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s">&#39;line&#39;</span><span class="p">:</span>
+</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">_trace_down</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_trace</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">_trace_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">while</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+</span><span class='line'>      <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span> <span class="o">==</span> <span class="n">test</span><span class="o">.</span><span class="n">__call__</span><span class="o">.</span><span class="n">func_code</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">break</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="bp">self</span><span class="o">.</span><span class="n">_collect</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+</span><span class='line'>      <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_back</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A trace function should take 3 parameters:
+* frame: the current <a href="http://docs.python.org/reference/datamodel.html#types">frame</a> object
+* event: what type of event that triggered the trace function? See <a href="http://docs.python.org/library/sys.html#sys.settrace">here</a>
+* <code>*args</code>: any additional arguments</p>
+
+<p>Here, I&#8217;m only interested in the <code>line</code> event, which is triggered when a new line of code is being executed. When this happens, we invoke <code>_trace_down</code>, which walks the frame stack by recursing on <code>frame.f_back</code>. When it&#8217;s <code>None</code>, we&#8217;re at the bottom of the stack. Because we&#8217;re tracing the execution of tests, we can probably stop traversing when the code object of the frame is the entry point of the test case (<code>if frame.f_code == test.__call__.func_code</code>). This way, we save ourselves some unnecessary traversals.</p>
+
+<h2>Data Collection</h2>
+
+<p>There&#8217;s are few things we need to collect: filename, line number of the code being executed and the test case name that covers the code.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">Nostrils</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>    <span class="nb">super</span><span class="p">(</span><span class="n">Nostrils</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span>
+</span><span class='line'>      <span class="k">lambda</span> <span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span>
+</span><span class='line'>        <span class="k">lambda</span> <span class="p">:</span> <span class="nb">set</span><span class="p">([])</span>
+</span><span class='line'>      <span class="p">)</span>
+</span><span class='line'>    <span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">_collect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">filename</span><span class="p">,</span> <span class="n">lineno</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_filename</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_lineno</span>
+</span><span class='line'>    <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="n">lineno</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">:</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_test</span><span class="o">.</span><span class="n">address</span><span class="p">())</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The data structure we use here is a dictionary of dictionary. At the top level, the keys are filenames, and the values are dictionaries of with keys the line numbers and the values the set of test case names. The data structure looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="s">&#39;foo.py&#39;</span><span class="p">:{</span>
+</span><span class='line'>      <span class="mi">1</span> <span class="p">:</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;test_foo.py:test_foo_case1&#39;</span><span class="p">,</span> <span class="s">&#39;test_foo.py:test_foo_case2&#39;</span><span class="p">]),</span>
+</span><span class='line'>      <span class="mi">2</span> <span class="p">:</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;test_foo.py:test_foo_case1&#39;</span><span class="p">,</span> <span class="s">&#39;test_foo.py:test_foo_case2&#39;</span><span class="p">]),</span>
+</span><span class='line'>      <span class="mi">3</span> <span class="p">:</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;test_foo.py:test_foo_case2&#39;</span><span class="p">])</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>There we have it! We have a prototype of what could become a PyUnitMax ;)</p>
+
+<h2>Potential Problems</h2>
+
+<ul>
+<li>Scale: Now I&#8217;m only running nostrils on trivial code base. Profiling and optimization is needed if nostrils were to be used in real-world cases.</li></li>
+<li>Multi-threading: No consideration was given to multi-threading at this stage.</li></li>
+</ul>
+
+
+<h2>Collaborators welcome!</h2>
+
+<p>I have since refactored the code, revised the data structure and published it on <a href="https://github.com/kevinjqiu/nostrils">github</a>. Please provide me with feedbacks and suggestions.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-04-17T16:58:00-04:00" pubdate data-updated="true">Apr 17<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/python/'>python</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2012/04/07/realtime-notification-delivery-using-rabbitmq/" title="Previous Post: Realtime notification delivery using rabbitmq">&laquo; Realtime notification delivery using rabbitmq</a>
+      
+      
+        <a class="basic-alignment right" href="/2012/06/18/statically-yours/" title="Next Post: Statically Yours">Statically Yours &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/';
+        var disqus_url = 'http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

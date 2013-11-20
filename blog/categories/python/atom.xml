@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: python | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/python/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Use Python's sys.settrace() for fun and for profit]]></title>
+    <link href="http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit/"/>
+    <updated>2012-04-17T16:58:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2012/04/17/use-pythons-sys-dot-settrace-for-fun-and-for-profit</id>
+    <content type="html"><![CDATA[<h2>The itch to scratch</h2>
+
+<p>Everyone in the software industry knows Kent Beck, the pioneers of extreme programming and test-driven development and the co-author of JUnit. One of his lesser known project was <a href="http://junitmax.com">JUnitMax</a>, which aims to reduce the time developers have to wait while tests are running. One of the ideas behind that is that when code changes, only the test cases that exercise the code need to be run, instead of running the entire suite. The idea makes a lot of sense to me, but at the time, I (and the development shop I was in) wasn't practising enough TDD, so unit test time wasn't a big problem for me back then.</p>
+
+<p>Fast-forward a few years, now as the project in my current company gets bigger, the time it takes to run tests is slowly becoming an impeding factor of my productivity. I remembered JUnitMax and say to myself, wouldn't it be neat if something like JUnitMax were available? As the name suggests, JUnitMax is for Java while my project is in Python. Java, being a statically-typed language, has the blessings of statical analysis, which means a tool like JUnitMax can figure out which test cases cover which lines of code simply by type analysis. Python, however, being a dynamic language, doesn't have this ability.</p>
+
+<p>A few days ago, while I was running unit tests with coverage, it dawned on me that if the coverage tool knows which lines of the source code is covered by unit tests, couldn't the same technique be used to figure out which lines are covered by which test cases?</p>
+
+<p>So, I started looking into <a href="http://nedbatchelder.com/code/coverage/">coveragepy</a>'s source code, and watching its author <a href="http://nedbatchelder.com/blog/">Ned Batchelder</a>'s excellent PyCon2011 <a href="http://blip.tv/pycon-us-videos-2009-2010-2011/pycon-2011-python-aware-python-4896752">video</a> on <code>sys.settrace</code>. I wanted to build a proof-of-concept tool that integrates with the de-facto Python unit-test tool <a href="https://github.com/nose-devs/nose">nose</a>, that, when run, gathers the information about which lines in the files in the source folder are covered by which test cases, and hence <a href="https://github.com/kevinjqiu/nostrils">nostrils</a> is born.</p>
+
+<h2>Here comes <code>sys.settrace()</code></h2>
+
+<p>Python's motto is "batteries included". This is manifested in many Python's stanndard library modules, such as ast (source code parsing) and dis (bytecode disassembly). One of which is the ability to make the Python interpreter call an external function whenever a line of code is being executed. You can do a lot of fun stuff with it, for example, Coverage.py uses this to build code coverage data; pdb uses it to insert breakpoints into a running application and change the way a Python program is executed.</p>
+
+<h2>How can it be used?</h2>
+
+<p>For <em>nostrils</em>, we need to write a nose plugin that installs the trace function when a test is encountered. The trace function records the line numbers and the current test case name. After all tests are run, we have our map.</p>
+
+<h2>A simple use case</h2>
+
+<p>To start, we need a simple use case:</p>
+
+<p>```python</p>
+
+<h1>worker.py</h1>
+
+<h1>this is the code-under-test</h1>
+
+<p>def add(x, y):</p>
+
+<pre><code>z = x + y
+return z
+</code></pre>
+
+<p>def subtract(x, y):</p>
+
+<pre><code>z = x - y
+return z
+</code></pre>
+
+<p>```</p>
+
+<p>```python</p>
+
+<h1>test_worker.py</h1>
+
+<h1>test cases</h1>
+
+<p>import worker</p>
+
+<p>def test_add():</p>
+
+<pre><code>assert 1 == worker.add(1, 0)
+</code></pre>
+
+<p>def test_add___negative():</p>
+
+<pre><code>assert 0 == worker.add(-1, 1)
+</code></pre>
+
+<p>def test_subtract():</p>
+
+<pre><code>assert 0 == worker.subtract(0, 0)
+</code></pre>
+
+<p>class TestFoo(object):</p>
+
+<pre><code>def test_add(self):
+    assert 5 == worker.add(5, 0)
+</code></pre>
+
+<p>```</p>
+
+<p>As you can see, we have 4 tests and 2 methods-under-test. Our goal is that when running <code>nosetests --with-nostrils</code> (<code>--with-nostrils</code> is the switch to turn on the nostrils plugin), we get the following mappings:</p>
+
+<p>```python worker.py
+def add(x, y):
+  z = x + y # test_add, test_add_negative, TestFoo.test_add
+  return z  # test_add, test_add_negative, TestFoo.test_add</p>
+
+<p>def subtract(x, y):
+  z = x - y # test_subtract
+  return z  # test_subtract
+```</p>
+
+<h2>Nose plugin</h2>
+
+<p>I won't go into the details about how to create a plugin for nose. You can read it <a href="http://readthedocs.org/docs/nose/en/latest/plugins/writing.html,%20and%20you%20can%20take%20a%20look%20at%20my%20sample%20setup%20[here](https://raw.github.com/kevinjqiu/nostrils/master/setup.py">here</a>. In a nutshell, every plugin has a name, and when nose is supplied with --with-<em>plugin_name</em>, your plugin is activated. Nose provides a test lifecycle "hooks" that plugins can implement. For example, <code>startTest</code> is called when a test case is discovered and adapted into a nose <a href="http://readthedocs.org/docs/nose/en/latest/api/test_cases.html">TestCase</a>. <code>addSuccess</code> is called when a test case succeeded. <code>finalize</code> is called when all tests are finished.</p>
+
+<p>Here's how my plugin looks like:</p>
+
+<p>```python
+class Nostrils(Plugin):</p>
+
+<pre><code>name = 'nostrils'
+
+def addError(self, test, err, *args):
+    self._restore_tracefn()
+
+def addFailure(self, test, err, *args):
+    self._restore_tracefn()
+
+def addSkip(self, test, err):
+    self._restore_tracefn()
+
+def addSuccess(self, test, err):
+    self._restore_tracefn()
+
+def startTest(self, test):
+    self._current_test = test
+    self._install_tracefn()
+
+def finalize(self, result):
+    self._print()
+
+def _install_tracefn(self):
+    self._orig_tracefn = sys.gettrace()
+    sys.settrace(self._trace) # See below
+
+def _restore_tracefn(self):
+    sys.settrace(self._orig_tracefn)
+</code></pre>
+
+<p>```</p>
+
+<p>The idea is that we install the trace function when test starts, and restore the trace function back to what it was. We also keeps track of what's the current test in <code>self._current_test</code>.</p>
+
+<h2>Trace function</h2>
+
+<p>Now let's have a look at the trace function:</p>
+
+<p>```python
+class Nostrils(Plugin):
+  # ...
+  def _trace(self, frame, event, arg):</p>
+
+<pre><code>if event == 'line':
+  self._trace_down(frame)
+return self._trace
+</code></pre>
+
+<p>  def _trace_down(self, frame):</p>
+
+<pre><code>while frame is not None:
+  if frame.f_code == test.__call__.func_code:
+    break
+
+  self._collect(frame)
+  frame = frame.f_back
+</code></pre>
+
+<p>```</p>
+
+<p>A trace function should take 3 parameters:
+* frame: the current <a href="http://docs.python.org/reference/datamodel.html#types">frame</a> object
+* event: what type of event that triggered the trace function? See <a href="http://docs.python.org/library/sys.html#sys.settrace">here</a>
+* <code>*args</code>: any additional arguments</p>
+
+<p>Here, I'm only interested in the <code>line</code> event, which is triggered when a new line of code is being executed. When this happens, we invoke <code>_trace_down</code>, which walks the frame stack by recursing on <code>frame.f_back</code>. When it's <code>None</code>, we're at the bottom of the stack. Because we're tracing the execution of tests, we can probably stop traversing when the code object of the frame is the entry point of the test case (<code>if frame.f_code == test.__call__.func_code</code>). This way, we save ourselves some unnecessary traversals.</p>
+
+<h2>Data Collection</h2>
+
+<p>There's are few things we need to collect: filename, line number of the code being executed and the test case name that covers the code.</p>
+
+<p>```python
+class Nostrils(Plugin):
+  def <strong>init</strong>(self):</p>
+
+<pre><code>super(Nostrils, self).__init__()
+self._data = defaultdict(
+  lambda : defaultdict(
+    lambda : set([])
+  )
+)
+</code></pre>
+
+<p>  def _collect(self, frame):</p>
+
+<pre><code>filename, lineno = frame.f_code.co_filename, frame.f_lineno
+self._data[filename][lineno].add("%s:%s.%s" % self._current_test.address())
+</code></pre>
+
+<p>```</p>
+
+<p>The data structure we use here is a dictionary of dictionary. At the top level, the keys are filenames, and the values are dictionaries of with keys the line numbers and the values the set of test case names. The data structure looks like this:</p>
+
+<p>```
+{
+  'foo.py':{</p>
+
+<pre><code>  1 : set(['test_foo.py:test_foo_case1', 'test_foo.py:test_foo_case2']),
+  2 : set(['test_foo.py:test_foo_case1', 'test_foo.py:test_foo_case2']),
+  3 : set(['test_foo.py:test_foo_case2'])
+</code></pre>
+
+<p>  }
+}
+```</p>
+
+<p>There we have it! We have a prototype of what could become a PyUnitMax ;)</p>
+
+<h2>Potential Problems</h2>
+
+<ul>
+<li>Scale: Now I'm only running nostrils on trivial code base. Profiling and optimization is needed if nostrils were to be used in real-world cases.</li></li>
+<li>Multi-threading: No consideration was given to multi-threading at this stage.</li></li>
+</ul>
+
+
+<h2>Collaborators welcome!</h2>
+
+<p>I have since refactored the code, revised the data structure and published it on <a href="https://github.com/kevinjqiu/nostrils">github</a>. Please provide me with feedbacks and suggestions.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Realtime notification delivery using rabbitmq]]></title>
+    <link href="http://kevinjqiu.github.com/2012/04/07/realtime-notification-delivery-using-rabbitmq/"/>
+    <updated>2012-04-07T16:50:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2012/04/07/realtime-notification-delivery-using-rabbitmq</id>
+    <content type="html"><![CDATA[<p>Our company has "hack-off" days once a while, where we developers get to choose whatever we would like to work on and present it to the entire company by the end of the day. I have been hearing this <a href="http://en.wikipedia.org/wiki/WebSocket">websocket</a> buzz for a while now and would like to build something interesting with it.</p>
+
+<h2>WebSocket</h2>
+
+<p>Websocket is a persistent bi-directional connection between the browser and the server. With websocket, web browser can post message to the server, but what's more interesting is that the server is able to push messages to the client (browser). This breaks away from the traditional web application request/response model. Traditionally, the client makes the request and waits for the server to give an answer. AJAX is revolutionary, but essentially, it's still the same model: the client asks the server whether there's anything interesting, but not the other way around. With websocket, the server suddenly becomes more involved and able to deliver more engaged user experience.</p>
+
+<p><a href="http://www.freshbooks.com/">Our company</a> provides web application for online invoicing. The web application allows users to create clients, create invoices, send them to clients, and so on. Each one of these are "events" which gets sent to <a href="http://www.rabbitmq.com/">RabbitMQ</a>. We then have a plethora of RabbitMQ consumers that read messages off the queue and do interesting stuff with them.</p>
+
+<h2>Proof of concept</h2>
+
+<p>For this hack-off, my goal is to write a RabbitMQ consumer that reads the messages off the message queue, and deliver (notify) them to the front-end using websocket.</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2012/04/websocket-1.png"><img src="http://reminiscential.files.wordpress.com/2012/04/websocket-1.png?w=300" alt="" title="architecture" width="300" height="181" class="aligncenter size-medium wp-image-292" /></a></p>
+
+<p>I've heard good things about <a href="http://www.tornadoweb.org">Tornado</a>. Having read their docs on <a href="http://www.tornadoweb.org/documentation/websocket.html">websocket request handler</a>, I felt it's straightforward enough for me, so I chose Tornado as my backend.</p>
+
+<h2>Pika</h2>
+
+<p>One problem arises, though: The tornado server will run as a regular server, waiting for incoming websocket connections. The RabbitMQ consumer also needs to be in the same process event loop, waiting for incoming messages from the message queue. I looked into a few solutions such as <a href="http://pypi.python.org/pypi/sparkplug/">sparkplug</a> and <a href="http://pypi.python.org/pypi/stormed-amqp/0.1">stormed-amqp</a>, neither seem to be a good hit here. Finally, I stumbled on <a href="https://github.com/pika/pika">Pika</a>. It comes with a Tornado event loop adapter, which allows rabbitmq consumer and websocket handlers to run inside the same event loop. Perfect.</p>
+
+<p>The entry point looks like this:</p>
+
+<p>```python
+application = tornado.web.Application([</p>
+
+<pre><code>(r'/ws', handlers.MyWebSocketHandler),
+</code></pre>
+
+<p>])</p>
+
+<p>def main():</p>
+
+<pre><code>pika.log.setup(color=True)
+
+io_loop = tornado.ioloop.IOLoop.instance()
+
+# PikaClient is our rabbitmq consumer
+pc = client.PikaClient(io_loop)
+application.pc = pc
+application.pc.connect()
+
+application.listen(8888)
+io_loop.start()
+</code></pre>
+
+<p>```</p>
+
+<p>```python
+class MyWebSocketHandler(tornado.websocket.WebSocketHandler):</p>
+
+<pre><code>def open(self, *args, **kwargs):
+    pika.log.info("WebSocket opened")
+
+def on_close(self):
+    pika.log.info("WebSocket closed")
+</code></pre>
+
+<p>```</p>
+
+<p>That was straightforward. However, I'm faced with the problem of how to make the amqp consumer notify websocket handlers when we receive a message from the message queue. We cannot get the handler instances from the tornado application object. Note, each websocket connection has a corresponding <code>MyWebSocketHandler</code> instance. The instances are not available from the application object. Maybe there's a way to get them by other means, but I'm not familiar with the tornado API enough to know that.</p>
+
+<p>However, from the handler, we do get the <code>application</code> object, and because we attached pika_client (our amqp consumer) to the application, we have access to it inside our socket handler. Hey, how about registering the handler with the client when the websocket is connected, and let the client "notify" the handler when events are received? Hey, isn't that the <a href="http://en.wikipedia.org/wiki/Observer_pattern">observer pattern</a>?</p>
+
+<p>Here's the code:</p>
+
+<p>```python
+class MyWebSocketHandler(websocket.WebSocketHandler):</p>
+
+<pre><code>def open(self, *args, **kwargs):
+    self.application.pc.add_event_listener(self)
+    pika.log.info("WebSocket opened")
+
+def on_close(self):
+    pika.log.info("WebSocket closed")
+    self.application.pc.remove_event_listener(self)
+</code></pre>
+
+<p>```</p>
+
+<p>Now, our <code>PikaClient</code> object need to support <code>add_event_listener()</code> and <code>remove_event_listener()</code> methods.</p>
+
+<p>```python
+class PikaClient(object):</p>
+
+<pre><code>def __init__(self, io_loop):
+    pika.log.info('PikaClient: __init__')
+    self.io_loop = io_loop
+
+    self.connected = False
+    self.connecting = False
+    self.connection = None
+    self.channel = None
+
+    self.event_listeners = set([])
+
+def connect(self):
+    if self.connecting:
+        pika.log.info('PikaClient: Already connecting to RabbitMQ')
+        return
+
+    pika.log.info('PikaClient: Connecting to RabbitMQ')
+    self.connecting = True
+
+    cred = pika.PlainCredentials('guest', 'guest')
+    param = pika.ConnectionParameters(
+        host='localhost',
+        port=5672,
+        virtual_host='/',
+        credentials=cred
+    )
+
+    self.connection = TornadoConnection(param,
+        on_open_callback=self.on_connected)
+    self.connection.add_on_close_callback(self.on_closed)
+
+def on_connected(self, connection):
+    pika.log.info('PikaClient: connected to RabbitMQ')
+    self.connected = True
+    self.connection = connection
+    self.connection.channel(self.on_channel_open)
+
+def on_channel_open(self, channel):
+    pika.log.info('PikaClient: Channel open, Declaring exchange')
+    self.channel = channel
+    # declare exchanges, which in turn, declare
+    # queues, and bind exchange to queues
+
+def on_closed(self, connection):
+    pika.log.info('PikaClient: rabbit connection closed')
+    self.io_loop.stop()
+
+def on_message(self, channel, method, header, body):
+    pika.log.info('PikaClient: message received: %s' % body)
+    self.notify_listeners(event_factory(body))
+
+def notify_listeners(self, event_obj):
+    # here we assume the message the sourcing app
+    # post to the message queue is in JSON format
+    event_json = json.dumps(event_ostener in self.event_listeners:
+        listener.write_message(event_json)
+        pika.log.info('PikaClient: notified %s' % repr(listener))
+
+def add_event_listener(self, listener):
+    self.event_listeners.add(listener)
+    pika.log.info('PikaClient: listener %s added' % repr(listener))
+
+def remove_event_listener(self, listener):
+    try:
+        self.event_listeners.remove(listener)
+        pika.log.info('PikaClient: listener %s removed' % repr(listener))
+    except KeyError:
+        pass
+</code></pre>
+
+<p>```</p>
+
+<p>I left out the queue setup code here for brevity. <code>on_message</code> callback is called when the consumer gets a message from the queue. The client, in turn, notifies all registered websocket handlers. Obviously, in real applications, you may want to do some kind of credentials and filtering, so the right message get to the right receiver. Then we simply call <code>handler.write_message()</code>, so the message gets relayed to the front-end's websocket.onmessage callback.</p>
+
+<p>Here's some front-end code:</p>
+
+<p>```javascript
+(function($){</p>
+
+<pre><code>$(document).ready(function() {
+    var ws = new WebSocket('ws://localhost:8888/ws');
+    ws.onmessage = function(evt){
+        alert(evt.data);
+    }
+});
+</code></pre>
+
+<p>})(jQuery);
+```</p>
+
+<p>Yes, we simply echo the message back. For the hackoff, I did parse the data, render a slightly more detailed notification message, and display the notification using jquery-toaster.</p>
+
+<h2>Conclusion</h2>
+
+<p>This is my first stab at websocket and the tornado web framework. I'm not an expert on either subject, so chances are there are better ways to achieve the same result.</p>
+
+<p>I think websocket is a very interesting technology. It opens a wide range of possibilities for more interactive and engaging web applications. Our web application is of traditional architecture: server renders most of the page, and every request involves page loads. Having a websocket may not be very beneficial as the application doesn't have that much of user interaction. My hackoff is more of a proof of concept. However, if the application is a one-page web app (no full page reloads), the websocket model works very well.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hexspeak and Generator]]></title>
+    <link href="http://kevinjqiu.github.com/2008/09/03/hexspeak-and-generator/"/>
+    <updated>2008-09-03T00:03:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2008/09/03/hexspeak-and-generator</id>
+    <content type="html"><![CDATA[<p>EDIT: 2011-04-21 While browsing my old blog posts, I found the code here can be greatly improved. Here it is:</p>
+
+<p>```python
+def words():</p>
+
+<pre><code>with open('/usr/share/dict/words', 'r') as f:
+    return (x.strip().upper() for x in f.readlines())
+</code></pre>
+
+<p>MAPPING = {'A':'A', 'B':'B', 'C':'C', 'D':'D',</p>
+
+<pre><code>       'E':'E', 'F':'F', 'O':'0', 'S':'5', 'I':'1'}
+</code></pre>
+
+<p>def main():</p>
+
+<pre><code>is_hexword = lambda word: all(ch in MAPPING for ch in word)
+for word in filter(is_hexword, words()):
+    print word, "\t", ''.join(MAPPING.get(ch, ch) for ch in word)
+</code></pre>
+
+<p>if <strong>name</strong> == '<strong>main</strong>':</p>
+
+<pre><code>main()
+</code></pre>
+
+<p>```</p>
+
+<p>So, it’s a relatively slow day at work, and I’ve been “stumbling upon” on Wikipedia when I found this:</p>
+
+<p><a href="http://en.wikipedia.org/wiki/Hexspeak">http://en.wikipedia.org/wiki/Hexspeak</a></p>
+
+<p>It’s pretty interesting, because I remember <a href="http://www.eecs.harvard.edu/~syrah/os161/">OS161</a> from my operating system course where they use 0xDEADBEEF as a value for uninitialized pointers. So I decided to write a small Python program that finds me all the “Hexspeak” words from a regular English dictionary.</p>
+
+<p>Beginning by finding a plain text English dictionary. I know Linux has a file ‘words’ in the file system somewhere. A little search gives me its location: /usr/share/dict/words</p>
+
+<p>Now onto Python coding:</p>
+
+<p>Define a character-to-hex map:</p>
+
+<p><code>python
+HEXSPEAK_DICT={'A':'A', 'B':'B', 'C':'C', 'D':'D', 'E':'E', 'F':'F', 'O':'0', 'L':'1', 'S':'5', 'I':'1', }
+</code></p>
+
+<p>Define a method to open the dictionary and return a list of words:</p>
+
+<p>```python
+DICT = '/usr/share/dictdef words(file=DICT):</p>
+
+<pre><code>f = open(file, 'r')
+retval = f.readlines()
+f.close()
+retval = [ x.strip().upper() for x in retval ]
+return retval
+</code></pre>
+
+<p>```</p>
+
+<p>Define a method to print out the collection of hexspeaks</p>
+
+<p>```python
+def print_dict(dict):</p>
+
+<pre><code>for key in dict.keys():
+    print "%-20s\t%s"%(key, dict[key])
+</code></pre>
+
+<p>```</p>
+
+<p>The program itself is pretty clear. We go through every character in every word in the dictionary. If the character is not in a permitted Hexspeak character, we through out the word. Otherwise, we take the character and translate it into a hexspeak character if necessary. Finally we print out the whole thing.</p>
+
+<p>Running it, it gives me a list of hexspeak words. Everything is cool.</p>
+
+<p>Now, the idea of generator has been around for a while. If you’re operating on a list, instead of loading the list into memory at once, you can use a generator and return one piece at a time, so it can save some resources. Granted, I’ve never used generators before, so I decided to experiement using a generator.</p>
+
+<p>Here’s the code. Everytime xwords() is called, it returns the next processed value in the list.</p>
+
+<p>```python
+def xwords(file=DICT):</p>
+
+<pre><code>f = open(file, 'r')
+retval = f.readlines()
+f.close()
+
+for rv in retval:
+    yield rv.strip().upper()
+</code></pre>
+
+<p>```</p>
+
+<p>Now we need to modify WORDS to make it point to xwords</p>
+
+<p><code>python
+WORDS = xwords()
+</code></p>
+
+<p>Running it, it gives the same result. So my experiment with generator succeeded! Hooray!</p>
+
+<p>However, a little profiling on the program contradicts the intuition that using a generator is faster. I used Python’s timeit module for profiling:</p>
+
+<p><code>bash
+python -m timeit -n 3 'import hexspeak; hexspeak.main()'
+</code></p>
+
+<p>Using generator:</p>
+
+<p><code>
+3 loops, best of 3: 565 msec per loop
+</code></p>
+
+<p>Using list:</p>
+
+<p><code>
+3 loops, best of 3: 549 msec per loop
+</code></p>
+
+<p>Hmmm, so not only using a generator doesn’t save me any time, it actually got beaten by a tad bit by the plain ol’ list implementation…I’m sure I’m missing some points here. A good topic for a blog post for another day.</p>
+
+<p>Here's a list of <a href="/2008/09/03/hexspeak-word-list">Hexspeak words</a></p>
+]]></content>
+  </entry>
+  
+</feed>

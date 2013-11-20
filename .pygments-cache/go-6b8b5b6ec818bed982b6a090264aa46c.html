@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="kd">func</span> <span class="nx">addJobs</span><span class="p">(</span><span class="nx">jobs</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="nx">Job</span><span class="p">,</span> <span class="nx">results</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="kt">int</span><span class="p">,</span> <span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+        <span class="nx">jobs</span> <span class="o">&lt;-</span> <span class="nx">Job</span><span class="p">{</span><span class="nx">i</span><span class="p">,</span> <span class="nx">results</span><span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nb">close</span><span class="p">(</span><span class="nx">jobs</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>

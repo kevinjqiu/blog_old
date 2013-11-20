@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GWT code split is awesome - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="For the past few days, I&#8217;ve been working on code splitting our existing GWT application. The application is fairly big with about 20k loc ( &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/03/26/gwt-code-split-is-awesome/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">GWT Code Split Is Awesome</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-26T13:38:00-04:00" pubdate data-updated="true">Mar 26<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>For the past few days, I&#8217;ve been working on code splitting our existing GWT application. The application is fairly big with about 20k loc (excluding javadoc, comments and tests). The download size (with obfuscated mode) is about 1.5M, and with pretty mode, is a whooping 10+M. Obviously this is not acceptable.</p>
+
+<p>GWT2 provides developer guided code splitting feature. It sounds complicated and under the hood, it may very well be (involves a lot of graph theories to figure out dependencies and so on) but from the user&#8217;s point of view, it&#8217;s very easy. You just have to wrap your potentially big operations in a <code>GWT.runAsync()</code> call.</p>
+
+<p>However, since our application is using GWT best practices (dependency injection, MVP pattern), it&#8217;s not as straightforward as GWT doc describes. A bit of digging on the internet leads me to <a href="http://code.google.com/p/google-gin/issues/detail?id=61">this page</a></p>
+
+<h2>Gin patch</h2>
+
+<p>Someone contributed a patch to gin, which made split points transparent to the user of gin. The presenters that aren&#8217;t needed initially can be wrapped in an AsyncProvider&lt;T&gt; instance - which by the blessing of deferred binding, translates into a GWT.runAsync call in the generated code. The patch hasn&#8217;t been accepted into gin&#8217;s trunk yet, but it&#8217;s fairly easy to apply the patch and rebuild. A huge thanks to <a href="http://code.google.com/u/fazal.asim/">fazal.asim</a> who hacked and contributed this patch.</p>
+
+<h2>Results</h2>
+
+<p>The result of code splitting is encouraging - with very little structural change, we&#8217;re able to reduce the initial download size to 29% of the total size:</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/untitled.png"><img class="aligncenter size-medium wp-image-194" title="code split result" src="http://reminiscential.files.wordpress.com/2010/03/untitled.png?w=300" alt="" width="300" height="93" /></a></p>
+
+<h2>Changes</h2>
+
+<p>I mentioned we needed very little structural change, but we did have to change something around. This is because with code splitting, the presenters that are split out from the initial download are not instantiated until they&#8217;re used/downloaded. This means you cannot put logic in their constructors, and responding to place change has to be initiated by the container presenters.</p>
+
+<h2>Improvements</h2>
+
+<p>Code splitting is awesome. However, if I&#8217;m allowed to voice a complaint, the report compiling time is just excruciating! For our application, it usually takes about 10 minutes to compile SOYC report - maybe a few minutes too long given the specs of my machine isn&#8217;t too bad (Quad Core, 3G memory). Also, the compiled SOYC report takes up 600M of hard disk space! Ouch! Maybe instead of emitting HTML pages, they can make SOYC report a JS application, with data being encoded in JSON format?</p>
+
+<p>Anyway, this doesn&#8217;t take anything away from the awesome job GWT team has done for developers.</p>
+
+<h2>Follow-up</h2>
+
+<p>Thanks to AsyncProxy, which provides a blocking (synchronous) interface while utilizing GWT.runAsync. This way, I&#8217;m able to build a view proxy that implements the same interface while keeping the real view components out of the initial call graph. The result of this, is a further reduction of the initial download size.</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/untitled1.png"><img class="aligncenter size-medium wp-image-197" title="Untitled1" src="http://reminiscential.files.wordpress.com/2010/03/untitled1.png?w=300" alt="" width="300" height="88" /></a>The initial download size is 13.77% of the total code size! Sweet!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-26T13:38:00-04:00" pubdate data-updated="true">Mar 26<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gwt/'>gwt</a>, <a class='category' href='/blog/categories/java-/'>java,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/03/26/gwt-code-split-is-awesome/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/03/26/gwt-code-split-is-awesome/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/" title="Previous Post: Building a GAE+GWT application using the best practices (Part 5)">&laquo; Building a GAE+GWT application using the best practices (Part 5)</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/05/19/google-io-2010-is-here/" title="Next Post: Google IO 2010 is here">Google IO 2010 is here &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/03/26/gwt-code-split-is-awesome/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/03/26/gwt-code-split-is-awesome/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

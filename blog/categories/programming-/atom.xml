@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: programming, | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/programming-/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Use delegation to write map/filter in Java]]></title>
+    <link href="http://kevinjqiu.github.com/2010/03/01/use-delegation-to-write-map-slash-filter-in-java/"/>
+    <updated>2010-03-01T19:32:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2010/03/01/use-delegation-to-write-map-slash-filter-in-java</id>
+    <content type="html"><![CDATA[<h2>The problem</h2>
+
+<p>In Java, imagine you have a list of <code>User</code> objects, each encapsulates the user's <code>id</code>, <code>first name</code>, <code>last name</code> and <code>age</code>. Then you want to call a web service <code>UserService.deleteUsersByIds(List&lt;Integer&gt; userIds)</code> to delete the users from your data store. It doesn't sound too hard, does it? All you need to do is to transform you <code>List&lt;User&gt;</code> to <code>List&lt;Integer&gt;</code>. So you go ahead and write the following code:</p>
+
+<p><code>java
+List&lt;Integer&gt; ids = new ArrayList&lt;Integer&gt;(users.size());
+for (User user : users) {
+  ids.append(user.getId());
+}
+</code></p>
+
+<p>Then you go ahead and use your <code>ids</code> list, and everything is fine and dandy.</p>
+
+<p>However, two minutes later, you find yourself having to provide another API method with a list of user's names in String. So, again, you exercise your <em>CSC101</em> skill:</p>
+
+<p><code>java
+List&lt;String&gt; names = new ArrayList&lt;String&gt;(users.size());
+for (User user : users) {
+  names.append(new StringBuilder(user.getFirstName()).append(" ").append("user.getLastName()));
+}
+</code></p>
+
+<p>Now, something else comes along and you need to write a piece of code that returns a list of names that belong to people who are under 21 years of age in the list...You get the idea. Well, things get boring pretty quickly.</p>
+
+<p>As it turns out, these are two very important functions in <a href="http://en.wikipedia.org/wiki/Functional_programming">functional programming</a> map and filter.</p>
+
+<ul>
+<li><code>map(coll, f)</code> "loops" over the collection, calls the function f on each element, and add the return of the <code>f(element)</code> to the return collection.</li>
+<li><code>filter(coll, f)</code> "loops" over the collection, calls <code>f(element)</code>, and only add element to the return list when <code>f(element)</code> returns <code>true</code></li>
+</ul>
+
+
+<h2>Use delegation for generic-ity</h2>
+
+<p>Now we take our first step in designing our generic map function:</p>
+
+<p>```java
+&lt;FromType, ToType> List<ToType> map(ArrayList<FromType> list) {
+  List<ToType> retval = new ArrayList<ToType>(list.size());
+  for (FromType item : list) {</p>
+
+<pre><code>[...]
+</code></pre>
+
+<p>  }
+  return retval;
+}
+```</p>
+
+<p>What we left out in the above code snippet is how the input is mapped to the output. This is where delegates come in. Unfortunately, Java doesn't have the language-level delegate. We need to design an interface for this delegate.</p>
+
+<p><code>java
+interface MapDelegate&lt;FromType, ToType&gt; {
+  ToType map(FromType obj);
+}
+</code></p>
+
+<p>The delegate is parameterized (to provide more type safety) with <code>FromType</code> and <code>ToType</code>. <code>FromType</code> is the type of the objects in the original list, and <code>ToType</code> is the type of objects in the mapped list. Now we need to change our method signature to incorporate the delegate.</p>
+
+<p>```java
+&lt;FromType, ToType> List<ToType> map(ArrayList<FromType> list, MapDelegate&lt;FromType, ToType> mapDelegate) {
+  List<ToType> retval = new ArrayList<ToType>(list.size());
+  for (FromType item : list) {</p>
+
+<pre><code>retval.add(mapDelegate.map(item));
+</code></pre>
+
+<p>  }
+  return retval;
+}
+```</p>
+
+<p>Now the client code will look like this:</p>
+
+<p>```java
+List<User> users = getUserListFromSomeWhere();
+List<String> ids = map(users, new MapDelegate&lt;User,String>() {
+  public String map(User obj) {</p>
+
+<pre><code>return new StringBuilder(user.getFirstName()).append(" ").append("user.getLastName()).toString();
+</code></pre>
+
+<p>  }
+});
+```</p>
+
+<p>Similarly, we can write a filter function:
+```java
+<T> List<T> filter(List<T> list, FilterDelegate<T> filterDelegate) {
+  List<T> retval = new ArrayList<T>(list.size());
+  for (T item : list) {</p>
+
+<pre><code>if (filterDelegate.filter(item)
+  retval.add(item);
+</code></pre>
+
+<p>  return retval;
+}
+```</p>
+
+<p><code>java
+interface FilterDelegate&lt;T&gt; {
+  boolean filter(T item);
+}
+</code></p>
+
+<h2>What about return value creation?</h2>
+
+<p>Use delegation, we can separate the parts of an algorithm in terms of their interfaces and leave the implementation to the caller. However, given the above filter and map methods, what if I don't want the return type to be <code>ArrayList</code>? What if I want a <code>LinkedList</code> or a <code>HashSet</code>? Doesn't the statement</p>
+
+<p><code>java
+  List&lt;T&gt; retval = new ArrayList&lt;T&gt;(list.size());
+</code></p>
+
+<p>an implementation by itself?</p>
+
+<p>Absolutely! For more flexibility, the "new" statement in the implementation body has to be delegated out as well. We introduce a <code>ReturnDelegate</code> interface:</p>
+
+<p><code>java
+interface ReturnDelegate&lt;R extends Collection&lt;?&gt;&gt; {
+  R createReturnCollection();
+}
+</code></p>
+
+<p>and plug in the return delegate to the map method:
+```java
+&lt;FromType, ToType, R extends Collection&lt;?>> R map(Collection<FromType> coll, MapDelegate&lt;FromType, ToType> mapDelegate, ReturnDelegate<R> returnDelegate) {
+  R retval = returnDelegate.createReturnCollection();
+  for (FromType item : list) {</p>
+
+<pre><code>retval.add(mapDelegate.map(item));
+</code></pre>
+
+<p>  }
+  return retval;
+}
+```</p>
+
+<p>Now the actual implementation has been completely separated. I know you can probably achieve flexibility without return delegate with the use of reflection, but on some systems (like GWT, which is what I'm working on and what this code is originally designed for), reflection is off limits.</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,11 @@
+<div class="highlight"><pre><span class="n">WidgetExpander</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;</span> <span class="n">expander</span> <span class="o">=</span> <span class="k">new</span> <span class="n">WidgetExpander</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;(</span><span class="k">new</span> <span class="n">WidgetRowRenderer</span><span class="o">&lt;</span><span class="n">SomeModel</span><span class="o">&gt;()</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="n">Widget</span> <span class="nf">render</span><span class="o">(</span><span class="kd">final</span> <span class="n">SomeModel</span> <span class="n">model</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">rowIdx</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// Create and return a widget according to the model</span>
+    <span class="o">}</span>
+<span class="o">});</span>
+
+<span class="c1">// Add expander into a list of ColumnConfigs</span>
+<span class="c1">// Create a grid with the ColumnConfig list</span>
+<span class="n">grid</span><span class="o">.</span><span class="na">addGridPlugin</span><span class="o">(</span><span class="n">expander</span><span class="o">);</span>
+</pre></div>

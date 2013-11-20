@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="p">(</span><span class="kd">defmacro </span><span class="nv">defcolour</span> <span class="p">[</span><span class="nv">colour-func-name</span> <span class="nv">bg-colour-func-name</span> <span class="o">^</span><span class="nv">Integer</span> <span class="nv">colour-code</span><span class="p">]</span>
+  <span class="o">`</span><span class="p">(</span><span class="nf">do</span>
+     <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+       <span class="p">(</span><span class="nf">adapt-lum</span> <span class="nv">text#</span> <span class="ss">:fg</span> <span class="o">~</span><span class="nv">colour-name</span><span class="p">))</span>
+     <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">bg-colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+       <span class="p">(</span><span class="nf">adapt-lum</span> <span class="nv">text#</span> <span class="ss">:bg</span> <span class="o">~</span><span class="nv">bg-colour-name</span><span class="p">))))</span>
+</pre></div>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: debugging | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/debugging/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Enable Auto-complete in a PDB session]]></title>
+    <link href="http://kevinjqiu.github.com/2009/06/12/enable-auto-complete-in-a-pdb-session/"/>
+    <updated>2009-06-12T09:25:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2009/06/12/enable-auto-complete-in-a-pdb-session</id>
+    <content type="html"><![CDATA[<p>EDIT: 2012-06-19 There are so many other much better options now that renders recipe obsolete. See <a href="https://bitbucket.org/antocuni/pdb/src">pdb++</a> or <a href="https://github.com/gotcha/ipdb">ipdb</a></p>
+
+<p>Pretty simple actually…Just put the following code in <code>~/.pdbrc</code> and then you can use the Tab key during a PDB session to see the available attributes of the current context.</p>
+
+<p><code>python
+import rlcompleter
+pdb.Pdb.complete=rlcompleter.Completer(locals()).complete
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

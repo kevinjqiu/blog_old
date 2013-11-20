@@ -1,0 +1,71 @@
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">PikaClient</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_loop</span><span class="p">):</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: __init__&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_loop</span> <span class="o">=</span> <span class="n">io_loop</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connecting</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_listeners</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([])</span>
+
+    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">connecting</span><span class="p">:</span>
+            <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: Already connecting to RabbitMQ&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: Connecting to RabbitMQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connecting</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">cred</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">PlainCredentials</span><span class="p">(</span><span class="s">&#39;guest&#39;</span><span class="p">,</span> <span class="s">&#39;guest&#39;</span><span class="p">)</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">pika</span><span class="o">.</span><span class="n">ConnectionParameters</span><span class="p">(</span>
+            <span class="n">host</span><span class="o">=</span><span class="s">&#39;localhost&#39;</span><span class="p">,</span>
+            <span class="n">port</span><span class="o">=</span><span class="mi">5672</span><span class="p">,</span>
+            <span class="n">virtual_host</span><span class="o">=</span><span class="s">&#39;/&#39;</span><span class="p">,</span>
+            <span class="n">credentials</span><span class="o">=</span><span class="n">cred</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">TornadoConnection</span><span class="p">(</span><span class="n">param</span><span class="p">,</span>
+            <span class="n">on_open_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_connected</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">add_on_close_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_closed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">on_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: connected to RabbitMQ&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connected</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">connection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">channel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_channel_open</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">on_channel_open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">):</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: Channel open, Declaring exchange&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">channel</span> <span class="o">=</span> <span class="n">channel</span>
+        <span class="c"># declare exchanges, which in turn, declare</span>
+        <span class="c"># queues, and bind exchange to queues</span>
+
+    <span class="k">def</span> <span class="nf">on_closed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection</span><span class="p">):</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: rabbit connection closed&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_loop</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">on_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">channel</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: message received: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">notify_listeners</span><span class="p">(</span><span class="n">event_factory</span><span class="p">(</span><span class="n">body</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">notify_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_obj</span><span class="p">):</span>
+        <span class="c"># here we assume the message the sourcing app</span>
+        <span class="c"># post to the message queue is in JSON format</span>
+        <span class="n">event_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">event_ostener</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_listeners</span><span class="p">:</span>
+            <span class="n">listener</span><span class="o">.</span><span class="n">write_message</span><span class="p">(</span><span class="n">event_json</span><span class="p">)</span>
+            <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: notified </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">listener</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">add_event_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_listeners</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">listener</span><span class="p">)</span>
+        <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: listener </span><span class="si">%s</span><span class="s"> added&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">listener</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">remove_event_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listener</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">event_listeners</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">listener</span><span class="p">)</span>
+            <span class="n">pika</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;PikaClient: listener </span><span class="si">%s</span><span class="s"> removed&#39;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">listener</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+</pre></div>

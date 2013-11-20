@@ -1,0 +1,7 @@
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">curried</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="n">argspec</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fn</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PartialFunc</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">argspec</span><span class="p">)</span>
+</pre></div>

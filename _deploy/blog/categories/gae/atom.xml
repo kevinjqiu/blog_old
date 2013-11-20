@@ -1,0 +1,816 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: gae | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/gae/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Building a GAE+GWT application using the best practices (Part 5)]]></title>
+    <link href="http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/"/>
+    <updated>2010-03-09T13:24:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5</id>
+    <content type="html"><![CDATA[<h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">Part 4</a></li>
+<li>Part 5</li>
+</ol>
+
+
+<p>In the last post of the series, I've shown how to setup a client side GIN+MVP project. This post will discuss the actual building of the UI and GWT-RPC web service calls using GWT-Dispatch on the client side.</p>
+
+<h2>Use cases</h2>
+
+<p>Before we dive into the code, let's go over again the use cases our little app has.
+<a href="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png"><img src="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png" alt="" title="RateChecker" width="259" height="216" class="aligncenter size-full wp-image-145" /></a></p>
+
+<ul>
+<li>When the UI loads, it should automatically fetch the latest saved rate</li>
+<li>Also, the table below the latest rate should display the 10 most recent rates stored in the data store</li>
+<li>The "Refresh" button does the above two steps</li>
+<li>The "Fetch latest" button fetches the rate from the bank website, store it in the data store, and insert the latest rate in the recent rate table</li>
+</ul>
+
+
+<h2>MVP pattern</h2>
+
+<p>For traditional desktop application, there's the MVC (Model-View-Control) pattern that's been in existence for over 20 years, since the Smalltalk days. However, the responsibility separation between the view and controller hasn't been well defined and over the years, people have been arguing about what whether the business logic should be entirely in controller.</p>
+
+<p>With the MVP (Model-View-Presenter) pattern, the view itself doesn't contain any logic. The presenter manipulates the view according to business logic. Therefore, the pattern is also called "supervising controller" or "passive view". This brings a huge benefit because now unit tests only have to deal with presenters, and mock out the view through the display interface. With this setup, the presenter unit tests can be run entirely in JVM. Otherwise, the tests need to involve GWT widgets, which can only be tested with GWTTestCase, which takes a lot longer to run.</p>
+
+<h2>MainView</h2>
+
+<p>Here I'm using the new GWT2 UiBinder feature. UiBinder makes developing UI less boring.</p>
+
+<p>```xml MainView.ui.xml
+&lt;!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent">
+&lt;ui:UiBinder xmlns:ui="urn:ui:com.google.gwt.uibinder"</p>
+
+<pre><code>xmlns:g="urn:import:com.google.gwt.user.client.ui"&gt;
+&lt;ui:style&gt;
+    .rateDisplay {
+        font-size: x-large;
+        font-weight: bolder;
+    }
+
+    .mainPanel {
+        padding: 10px;
+    }
+&lt;/ui:style&gt;
+
+&lt;ui:with type="ratechecker.client.bundles.RateCheckerClientBundle"
+    field="bundle"&gt;&lt;/ui:with&gt;
+&lt;g:DecoratorPanel height="200px"&gt;
+    &lt;g:VerticalPanel styleName="{style.mainPanel}" verticalAlignment="ALIGN_TOP"&gt;
+        &lt;g:Label&gt;Latest Selling Rate&lt;/g:Label&gt;
+        &lt;g:Image resource="{bundle.loading}" visible="false"
+            ui:field="loading"&gt;&lt;/g:Image&gt;
+        &lt;g:Label ui:field="rateDisplay" styleName="{style.rateDisplay}"&gt;&lt;/g:Label&gt;
+        &lt;g:HorizontalPanel&gt;
+            &lt;g:Button ui:field="fetchLatest"&gt;Fetch Latest&lt;/g:Button&gt;
+            &lt;g:Button ui:field="refresh"&gt;Refresh&lt;/g:Button&gt;
+        &lt;/g:HorizontalPanel&gt;
+
+        &lt;g:Label&gt;Recent rates&lt;/g:Label&gt;
+        &lt;g:FlexTable ui:field="rateTable"&gt;
+        &lt;/g:FlexTable&gt;
+    &lt;/g:VerticalPanel&gt;
+&lt;/g:DecoratorPanel&gt;
+</code></pre>
+
+<p>&lt;/ui:UiBinder>
+```</p>
+
+<p>UiBinder can inter-operate with GWT2 ClientBundle. If you have used GWT1.x's ImageBundle, ClientBundle is similar to that, except now with ClientBundle, other client resources are able to be bundled such as CSS stylesheet and external text resource.</p>
+
+<h3>MainPresenter.Display</h3>
+
+<p>The display interface is the only thing presenter knows about the UI, and the presenter operates/manipulates UI only through the display interface.</p>
+
+<p>The display interface can be standalone, but I find it's much more convenient to have it as an inner interface inside the presenter class.
+```java</p>
+
+<pre><code>public interface Display extends WidgetDisplay {
+    HasText getRateDisplayLabel();
+    HasClickHandlers getFetchLatest();
+    HasClickHandlers getRefresh();
+
+    void setEnabledFetchLatestButton(boolean isEnabled);
+    void setShowLoadingCurrentRate(boolean isLoading);
+    /**
+     * Add the rate to the recent rate table.
+     * @param rate
+     *      The {@link Rate} object
+     * @param toHead
+     *      &lt;code&gt;true&lt;/code&gt; - rate is inserted to the beginning of the table
+     *      &lt;code&gt;false&lt;/code&gt; - rate is appended to the end of the table
+     */
+    void addToRecentRates(Rate rate, boolean toHead);
+    /**
+     * Clear the recent rates table.
+     */
+    void clearRecentRates();
+}
+</code></pre>
+
+<p>```</p>
+
+<p>Here we use the "characteristic interface" of the UI elements as return type as they can be mocked. For things that cannot be returned as characteristic interfaces (like FlexTable), we provide methods for the presenter to manipulate the state of the UI objects (such as clearRecentRates()).</p>
+
+<h3>MainView.java</h3>
+
+<p>Now we have the display interface, we can map these interface methods onto our UI.
+```java MainView.java
+package ratechecker.client.mvp;</p>
+
+<p>public class MainView extends Composite implements MainPresenter.Display {</p>
+
+<pre><code>private static MainViewUiBinder uiBinder = GWT
+.create(MainViewUiBinder.class);
+
+interface MainViewUiBinder extends UiBinder&lt;Widget, MainView&gt; {
+}
+
+@UiField
+Button refresh;
+
+@UiField
+Button fetchLatest;
+
+@UiField
+Label rateDisplay;
+
+@UiField
+FlexTable rateTable;
+
+@UiField
+Image loading;
+
+private final DateTimeFormat _dateTimeFormat;
+
+@Inject
+public MainView(final DateTimeFormat dateTimeFormat) {
+    _dateTimeFormat = dateTimeFormat;
+    initWidget(uiBinder.createAndBindUi(this));
+}
+
+@Override
+public HasClickHandlers getFetchLatest() {
+    return fetchLatest;
+}
+
+@Override
+public Widget asWidget() {
+    return this;
+}
+
+@Override
+public HasText getRateDisplayLabel() {
+    return rateDisplay;
+}
+
+@Override
+public void setEnabledFetchLatestButton(final boolean isEnabled) {
+    fetchLatest.setEnabled(isEnabled);
+}
+
+@Override
+public void addToRecentRates(final Rate rate, final boolean toHead) {
+    final int newRowIdx = toHead ? 0 : rateTable.getRowCount();
+    rateTable.insertRow(newRowIdx);
+    rateTable.setText(newRowIdx, 0, _dateTimeFormat.format(rate.getTimeFetched()));
+    rateTable.setText(newRowIdx, 1, String.valueOf(rate.getRate()));
+}
+
+@Override
+public void clearRecentRates() {
+    rateTable.removeAllRows();
+}
+
+@Override
+public HasClickHandlers getRefresh() {
+    return refresh;
+}
+
+@Override
+public void setShowLoadingCurrentRate(final boolean isLoading) {
+    loading.setVisible(isLoading);
+    rateDisplay.setVisible(!isLoading);
+}
+
+@Override public void startProcessing() { }
+
+@Override public void stopProcessing() { }
+</code></pre>
+
+<p>}
+```</p>
+
+<p>A lot of this is boilerplate code to satisfy both UiBinder and GWT-presenter.Display interface. Ideally, the VIew shouldn't do too much, if any at all. Realistically, this is harder to achieve.</p>
+
+<h3>MainPresenter</h3>
+
+<p>Finally, we can show you the presenter code.
+```java MainPresenter.java</p>
+
+<p>public class MainPresenter extends WidgetPresenter&lt;MainPresenter.Display> {</p>
+
+<pre><code>private final DispatchAsync _dispatch;
+
+private final ILog _logger;
+
+@Inject
+public MainPresenter(final Display display, final EventBus eventBus, final DispatchAsync dispatch, final ILog logger) {
+    super(display, eventBus);
+    _dispatch = dispatch;
+    _logger = logger;
+}
+
+@Override
+protected void onBind() {
+    registerHandler(display.getFetchLatest().addClickHandler(new ClickHandler() {
+
+        @Override
+        public void onClick(final ClickEvent event) {
+            fetchSellingRate();
+        }
+
+    }));
+
+    registerHandler(eventBus.addHandler(RateFetchedEvent.TYPE, new RateFetchedHandler() {
+
+        @Override
+        public void onRateFetched(final Rate rate) {
+            saveRate(rate);
+        }
+
+    }));
+
+    registerHandler(eventBus.addHandler(RateSavedEvent.TYPE, new RateSavedHandler() {
+
+        @Override
+        public void onRateSaved(final Rate rate) {
+            display.addToRecentRates(rate, true);
+        }
+
+    }));
+
+    registerHandler(display.getRefresh().addClickHandler(new ClickHandler() {
+
+        @Override
+        public void onClick(final ClickEvent event) {
+            getLatestSavedRates();
+        }
+
+    }));
+
+    getLatestSavedRates();
+}
+
+void getLatestSavedRates() {
+    display.setShowLoadingCurrentRate(true);
+
+    final GetRates getRates = new GetRates();
+
+    _dispatch.execute(getRates, new AsyncCallback&lt;GetRatesResult&gt;() {
+
+        @Override
+        public void onFailure(final Throwable caught) {
+            display.setShowLoadingCurrentRate(false);
+            _logger.error("Unable to get saved rates: " + caught.getMessage());
+        }
+
+        @Override
+        public void onSuccess(final GetRatesResult result) {
+            display.setShowLoadingCurrentRate(false);
+            display.clearRecentRates();
+
+            for (final Rate rate : result.getRates()) {
+                display.addToRecentRates(rate, true);
+            }
+
+            // Put the latest rate in the box
+            if (result.getRates().size() &gt; 0) {
+                final Rate latestRate = result.getRates().get(0);
+                display.getRateDisplayLabel().setText(String.valueOf(latestRate.getRate()));
+            }
+        }
+    });
+
+}
+
+void fetchSellingRate() {
+    display.setShowLoadingCurrentRate(true);
+    final CheckRate checkRate = new CheckRate(RateType.Selling);
+    _dispatch.execute(checkRate, new AsyncCallback&lt;CheckRateResult&gt;() {
+
+        @Override
+        public void onFailure(final Throwable caught) {
+            display.setShowLoadingCurrentRate(false);
+            _logger.error("Unable to fetch rate: " + caught.getMessage());
+        }
+
+        @Override
+        public void onSuccess(final CheckRateResult result) {
+            display.setShowLoadingCurrentRate(false);
+            // enable the fetch button
+            display.setEnabledFetchLatestButton(true);
+            display.getRateDisplayLabel().setText(String.valueOf(result.getRate().getRate()));
+            eventBus.fireEvent(new RateFetchedEvent(result.getRate()));
+        }
+
+    });
+
+    // disable the fetch button until RPC succeeds
+    display.setEnabledFetchLatestButton(false);
+}
+
+void saveRate(final Rate rate) {
+    final SaveRate saveRate = new SaveRate(rate);
+
+    _dispatch.execute(saveRate, new AsyncCallback&lt;SaveRateResult&gt;() {
+
+        @Override
+        public void onFailure(final Throwable caught) {
+            _logger.error("Unable to save rate: " + caught.getMessage());
+        }
+
+        @Override
+        public void onSuccess(final SaveRateResult result) {
+            eventBus.fireEvent(new RateSavedEvent(rate));
+        }
+
+    });
+
+}
+
+@Override protected void onPlaceRequest(final PlaceRequest request) { }
+
+@Override protected void onUnbind() {}
+
+@Override public void refreshDisplay() {}
+
+@Override public void revealDisplay() {}
+
+@Override public Place getPlace() { return null; }
+</code></pre>
+
+<p>}
+```</p>
+
+<p>In the binding process, the event handlers are attached to the view components. <code>MainPresenter.bind()</code> was explicitly called by <code>AppPresenter.go()</code>. This is a simple application with one presenter. If there are more presenters, <code>AppPresenter</code> needs to manage the state of these sub-presenters: if they're active, the <code>bind()</code> method is called. If the presenter is no-longer active, the presenter's <code>unbind()</code> method should be called to un-attach the handlers, so they don't interfere with the event handlers that are currently in the active presenter.</p>
+
+<p>The presenter is also responsible for making web service calls and deal with the returns. To call GWT-RPC web service using GWT-dispatch, we inject a DispatchAsync, which is an asynchronous counter part of the DispatchServlet introduced a few posts ago.</p>
+
+<p>To call a web service, we simply construct an action object with required parameters and pass it in <code>DispatchAsync.execute()</code> and expect an <code>AsyncCallback</code> of type result that's coupled with the action. (remember each action has a coupled result type). Also, in this application, every action has a related event to indicate whether the action is successful. The event is thrown onto the event bus, so any interested party can handle that. The main benefit of using event bus is that my web service calls don't have to be coupled with the subsequent actions. For example, saveRate() method is responsible for making the web service calls, but the subsequent action (adding the saved rate to the recent rate table) isn't part of saveRate() method, and it shouldn't be. If in the future, some other actions need to be carried out when a rate is saved, we just have to add the action in the RateSavedHandler, and indeed, if another part of the UI (not visible by main presenter) need to do something after the rate is saved, that presenter only needs to handle that event in there without affecting saveRate() method at all.</p>
+
+<p>For view the full source code, take a look at the project I created on <a href="http://github.com/kevinjqiu/ratechecker">Github</a>.</p>
+
+<p><strong>EDIT:</strong> For any Google App Engine experts out there happened to be reading this post, I'm having trouble with the performance of this simple app. Seems like the data store is taking way too much time executing my query. Initially I thought it was because URL fetch is slow, but I recently added a property in Rate entity to track the time spent on fetching the URL and every request takes less than 1 second. However, the GetRates action takes a long time to return (usually ~3 to 5 seconds, sometimes even over 10 seconds). It's a simple query ordering on a single property so no complex index is needed. So I'm wondering what's wrong here.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building a GAE+GWT application using the best practices (Part 4)]]></title>
+    <link href="http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/"/>
+    <updated>2010-03-03T13:15:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4</id>
+    <content type="html"><![CDATA[<h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li>Part 4</li>
+<li><a href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">Part 5</a></li>
+</ol>
+
+
+<p>In the last blog post, we went over how to write GWT-RPC handlers using GWT-dispatch and dependency injection (Guice). This section, we're going to see how the client side is set up.</p>
+
+<h2>Dependencies</h2>
+
+<p>We need the following dependencies
+* <a href="http://code.google.com/p/google-gin/">Gin</a>
+* <a href="http://code.google.com/p/gwt-dispatch/">GWT-dispatch</a>
+* <a href="http://code.google.com/p/gwt-presenter/">GWT-presenter</a>
+* <a href="http://code.google.com/p/gwt-log/">GWT-log</a></p>
+
+<p>They need to be on the classpath when you compile your GWT code, but not under the war directory like the server dependencies need to be.</p>
+
+<h2>Module definition</h2>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/screenshot1.png"><img src="http://reminiscential.files.wordpress.com/2010/03/screenshot1.png?w=200" alt="" title="Screenshot" width="200" height="300" class="aligncenter size-medium wp-image-172" /></a></p>
+
+<p>The first step is to declare the inherited GWT modules in the module XML file:
+RateChecker.gwt.xml
+```xml
+&lt;?xml version="1.0" encoding="UTF-8"?>
+<module rename-to="ratechecker"></p>
+
+<pre><code>&lt;inherits name="com.google.gwt.user.User" /&gt;
+&lt;inherits name="com.google.gwt.inject.Inject" /&gt;
+&lt;inherits name="net.customware.gwt.dispatch.Dispatch" /&gt;
+&lt;inherits name="net.customware.gwt.presenter.Presenter" /&gt;
+&lt;inherits name="com.allen_sauer.gwt.log.gwt-log-DEBUG" /&gt;
+&lt;inherits name="com.google.gwt.user.theme.chrome.Chrome"/&gt;
+
+&lt;entry-point class="ratechecker.client.RateChecker" /&gt;
+
+&lt;source path="client" /&gt;
+&lt;source path="shared" /&gt;
+</code></pre>
+
+<p></module>
+```</p>
+
+<p>Here we specify the explicitly the packages need to be included for compiling - "client" and "shared". If not specified, GWT will by default compile every source file under the client package.</p>
+
+<h2>Create a Gin Module</h2>
+
+<p>Gin and Guice implements the same API (or rather, Gin has the same interface as Guice), but Gin uses GWT deferred binding "magic". Similar to what we have on the server side, on the client side, we start by defining our module:
+RateCheckerClientModule:</p>
+
+<p>```java RateCheckerClientModule.java
+public class RateCheckerClientModule extends AbstractPresenterModule {</p>
+
+<pre><code>public RateCheckerClientModule() {
+}
+
+@Override
+protected void configure() {
+
+    bind(EventBus.class).to(DefaultEventBus.class).in(Singleton.class);
+    bind(PlaceManager.class).in(Singleton.class);
+
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>To start up, we bind EventBus and PlaceManager in the singleton scope. They're both provided by GWT-mvp library.</p>
+
+<h2>AppPresenter</h2>
+
+<p>There are different ways to facilitate the MVP pattern but the way I find the most convenient is to have an AppPresenter manage all subsequent presenters. The view the AppPresenter represents is the RootPanel of GWT.</p>
+
+<p>```java AppPresenter.java
+public class AppPresenter {</p>
+
+<pre><code>private HasWidgets _container;
+
+private final MainPresenter _mainPresenter;
+
+
+@Inject
+public AppPresenter(final MainPresenter mainPresenter) {
+    _mainPresenter = mainPresenter;
+    _mainPresenter.bind();
+}
+
+
+public void go(final HasWidgets container) {
+    _container = container;
+    _container.clear();
+    _container.add(_mainPresenter.getDisplay().asWidget());
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Here, MainPresenter is the actual UI. The go() method of AppPresenter is for the module entry point to call when the module first initializes. We need to add the bindings to the client module:</p>
+
+<p>```java</p>
+
+<pre><code>    ...
+@Override
+protected void configure() {
+
+    bind(EventBus.class).to(DefaultEventBus.class).in(Singleton.class);
+    bind(PlaceManager.class).in(Singleton.class);
+    bind(ILog.class).to(GwtLogAdapter.class).in(Singleton.class);
+    bind(AppPresenter.class);
+
+    bindPresenter(MainPresenter.class, MainPresenter.Display.class, MainView.class);
+}
+    ...
+</code></pre>
+
+<p>```</p>
+
+<p>Here we specify the explicitly the packages need to be included for compiling - "client" and "shared". If not specified, GWT will by default compile every source file under the client package.</p>
+
+<h2>Ginjector</h2>
+
+<p>Similar to "Injector" interface on the server side, the client side needs to define a Ginjector that act as a gateway for Gin managed object instances.</p>
+
+<p>```java RateCheckerGinjector.java
+@GinModules({RateCheckerClientModule.class, ClientDispatchModule.class})
+public interface RateCheckerGinjector extends Ginjector {</p>
+
+<pre><code>AppPresenter getAppPresenter();
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Here the annotation <code>@GinModules({...})</code> makes the instances managed by <code>RateCheckerClientModule</code> and <code>ClientDispatchModule</code> available for the ginjector. ClientDispatchModule binds DispatchAsync interface, which is what we will use to interface with the web service methods.</p>
+
+<h2>Entry Point</h2>
+
+<p>Finally, here's the module entry point:
+```java
+/<em>*
+ * Entry point classes define <code>onModuleLoad()</code>.
+ </em>/
+public class RateChecker implements EntryPoint {</p>
+
+<pre><code>RateCheckerGinjector _injector = GWT.create(RateCheckerGinjector.class);
+
+@Override
+public void onModuleLoad() {
+
+    final AppPresenter appPresenter = _injector.getAppPresenter();
+    appPresenter.go(RootPanel.get("root"));
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p><code>GWT.create(...)</code> statement here creates the ginjector at runtime. Behind the scene, it generates a class (by the name of something like RateCheckerGinjector_Impl) that contains the code to instantiate the bound classes, and when Gin sees a @Inject annotation on a class's constructor, it provides the instances with the correct scope from the dependency injection container (Ginjector) to the constructor so that the said class can be instantiated.</p>
+
+<p>The onModuleLoad() method doesn't do much. It simple binds the appPresenter with the RootPanel where the app's UI is going to be displayed.</p>
+
+<p>I know a lot of the concrete UI creation has been left out of this post, but hopefully it will become clearer once the next post is in.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building a GAE+GWT application using the best practices (Part 2)]]></title>
+    <link href="http://kevinjqiu.github.com/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/"/>
+    <updated>2010-03-01T00:44:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2</id>
+    <content type="html"><![CDATA[<h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li>Part 2</li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">Part 4</a></li>
+<li><a href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">Part 5</a></li>
+</ol>
+
+
+<p>In Part 2, we're going to go over project setup for GAE and GWT applications, and wire the server (servlet) using <a href="http://code.google.com/p/google-guice/">Guice</a> and <a href="http://code.google.com/p/gwt-dispatch/">GWT-Dispatch</a>.</p>
+
+<h2>Project setup</h2>
+
+<p>I'm using Eclipse as my development environment. Install <a href="http://code.google.com/eclipse/">Google Eclipse plugin</a>, and install the provided GWT (2.0.2) and GAE (1.3.1) with the plugin. Create a new project in Eclipse using the "New web application project" wizard, and create a sample project.</p>
+
+<p>Now, because during deployment, GAE applications are executed within its own servlet container, all dependencies have to be placed inside the directory /war/WEB-INF/lib. Go ahead, download <a href="http://code.google.com/p/google-guice/downloads/list">Guice</a>, <a href="http://code.google.com/p/gwt-dispatch/downloads/list">GWT-dispatch</a>, <a href="http://code.google.com/p/gwt-log/downloads/list">GWT-log</a>, <a href="http://commons.apache.org/downloads/download_logging.cgi">commons-logging</a> and <a href="http://logging.apache.org/log4j/1.2/download.html">log4j</a>. Put the jar files inside /war/WEB-INF/lib directory. Then in Eclipse, select the jars you just placed, right click and select "Add to build path". Your lib directory should look something like this:</p>
+
+<p><a href="http://reminiscential.files.wordpress.com/2010/03/screenshot.png"><img class="aligncenter size-medium wp-image-158" title="Screenshot" src="http://reminiscential.files.wordpress.com/2010/03/screenshot.png?w=168" alt="" width="168" height="300" /></a></p>
+
+<h2>"Wiring" the server</h2>
+
+<p>Now that the project is setup, we need to wire the server to utilize the dependency injection container Guice. The details can be found <a href="http://code.google.com/p/google-guice/wiki/GoogleAppEngine">here</a> but in short, we need to do the following:</p>
+
+<h3>Modify web.xml</h3>
+
+<p>Find web.xml in /war/WEB-INF. In traditional GWT-RPC development, every service needs to be written as a servlet and declared in web.xml. For Guice + GWT-dispatch, we only need a filter and a listener (as the entry point).</p>
+
+<p>```xml
+<webapp></p>
+
+<pre><code>    [...]
+&lt;filter&gt;
+    &lt;filter-name&gt;guiceFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;com.google.inject.servlet.GuiceFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;guiceFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;
+
+&lt;listener&gt;
+    &lt;listener-class&gt;ratechecker.server.guice.GuiceServletConfig&lt;/listener-class&gt;
+&lt;/listener&gt;
+    [...]
+</code></pre>
+
+<p></webapp>
+```</p>
+
+<p>Here, our listener is ratechecker.server.guice.GuiceServletConfig. It reads like the following</p>
+
+<p>```java
+public class GuiceServletConfig extends GuiceServletContextListener {</p>
+
+<pre><code>private ServletContext _ctx;
+
+@Override
+public void contextDestroyed(final ServletContextEvent servletContextEvent) {
+    _ctx = null;
+    super.contextDestroyed(servletContextEvent);
+}
+
+@Override
+public void contextInitialized(final ServletContextEvent servletContextEvent) {
+    _ctx = servletContextEvent.getServletContext();
+    super.contextInitialized(servletContextEvent);
+}
+
+@Override
+protected Injector getInjector() {
+    return Guice.createInjector(new GuiceServerModule(), new DispatchServletModule());
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This code is borrowed from <a href="http://james.apache.org/hupa/project-info.html">Hupa</a>. The responsibility of this servlet context listener is to construct an injector (achieved by the last method). Here, our injector contains two modules, <code>ratechecker.server.guice.GuiceServerModule</code> and <code>ratechecker.server.guice.DispatchServletModule</code>.</p>
+
+<p>```java DispatchServletModule.java
+public class DispatchServletModule extends ServletModule {</p>
+
+<pre><code>@Override
+protected void configureServlets() {
+    super.configureServlets();
+    serve("/ratechecker/dispatch").with(RateCheckerDispatchServlet.class);
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This module has a mapping of URIs and its serving classes. It serves "/ratechecker/dispatch" with <code>RateCheckerDispatchServlet</code>, which is the entry point for GWT-dispatch.</p>
+
+<p>```java GuiceServerModule.java
+public class GuiceServerModule extends ActionHandlerModule {</p>
+
+<pre><code>public GuiceServerModule() {
+}
+
+@Override
+protected void configureHandlers() {
+        // declare bindings
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This is where you declare your bindings for the application. We'll come back to this file frequently as the application develops.</p>
+
+<p>```java RateCheckerDispatchServlet.java
+@Singleton
+public class RateCheckerDispatchServlet extends DispatchServiceServlet {</p>
+
+<pre><code>private static final long serialVersionUID = 4895255235709260169L;
+
+private final Log _logger;
+
+@Inject
+public RateCheckerDispatchServlet(final Dispatch dispatch, final Log logger) {
+    super(dispatch);
+    _logger = logger;
+}
+
+@Override
+public Result execute(final Action&lt;?&gt; action) throws ActionException {
+    try {
+        _logger.info("executing: " + action.getClass().getName());
+        final Result res = super.execute(action);
+        _logger.info("finished: " + action.getClass().getName());
+        return res;
+    } catch (final ActionException ae) {
+        _logger.error(ae.getMessage());
+        ae.printStackTrace();
+        throw ae;
+    } catch (final Exception e) {
+        _logger.error("Unexpected exception: " + e.getMessage());
+        e.printStackTrace();
+    }
+    return null;
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>This servlet extends from GWT-dispatch's DispatchServiceServlet. It's main responsibility is to provide unified logging.</p>
+
+<p>Notice you cannot run the application, because Guice is complaining that there's no binding for <code>org.apache.commons.logging.Log</code>, which we declared as a dependency for RateCheckerDispatchServlet. We go ahead write our <code>LogProvider</code> (to provide lazy initialization for the Log object to its users)</p>
+
+<p>```java LogProvider.java
+public class LogProvider implements Provider<Log> {</p>
+
+<pre><code>@Override
+public Log get() {
+    return new Log4JLogger("RateCheckerLogger");
+}
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Now the binding should be added to <code>GuiceServerModule</code>:
+```java GuiceServerModule.java
+[...]</p>
+
+<pre><code>@Override
+protected void configureHandlers() {
+        bind(Log.class).toProvider(LogProvider.class).in(Singleton.class);
+}
+</code></pre>
+
+<p>[...]
+```</p>
+
+<p>Now everytime Guice sees <code>Log.class</code> declared as a dependency in the constructor, it uses <code>LogProvider.get()</code> method to retrieve an instance of the log if there's none, and uses the existing log instance if it's been initialized (because of the singleton scope).</p>
+
+<p>In the end, your server package should look like this:
+<a href="http://reminiscential.files.wordpress.com/2010/03/screenshot-1.png"><img src="http://reminiscential.files.wordpress.com/2010/03/screenshot-1.png?w=300" alt="" title="Screenshot-1" width="300" height="154" class="aligncenter size-medium wp-image-159" /></a></p>
+
+<p>We haven't covered PersistenceManagerProvider but it's the same idea as LogProvider. It provides an instance of PersistenceManager, which is used by the data store related action handlers to deal with data persistence.</p>
+
+<p>That's it for server wiring. In the next blog post, I'll go through designing and writing GWT-RPC services using Guice and GWT-dispatch.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building a GAE+GWT application using the best practices (Part 1)]]></title>
+    <link href="http://kevinjqiu.github.com/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/"/>
+    <updated>2010-02-26T00:39:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1</id>
+    <content type="html"><![CDATA[<h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li>Part 1</li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">Part 4</a></li>
+<li><a href="/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">Part 5</a></li>
+</ol>
+
+
+<p>This is the first installment of the series Building a GAE+GWT application using the best practices.</p>
+
+<h2>Introduction</h2>
+
+<p>In the next few blog posts, I'm going to present my experience building a simple (but non-trivial) web application using GWT and Google App Engine, while applying the best practices introduced by Ray Ryan in his excellent <a href="http://code.google.com/events/io/2009/sessions/GoogleWebToolkitBestPractices.html">GWT best practices</a> at Google IO last year.</p>
+
+<p>The application I'm going to build is called RateChecker. It's simply a tool that goes fetches the posted USD/CAD exchange rate from a bank website, persists the rate to the data store, and present the user with the recent rates when requested. It can potentially do more (like generating a histogram of the rates, etc), but for the purpose of blog series, I'm going with the basics to illustrate the implementation pattern without losing my bearings in the embellishing.</p>
+
+<p>Here's a screenshot of the finished application:</p>
+
+<p style="text-align:center;"><a href="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png"><img class="size-full wp-image-145 aligncenter" title="RateChecker" src="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png" alt="" width="259" height="216" /></a></p>
+
+
+<h2>The Goals</h2>
+
+<p>I intend to use this minimal application to practice using the following technologies/techniques:
+* Server/Persistence tier:</p>
+
+<pre><code>* Google Guice as dependency injection container on the server side
+* JDO as the persistence layer
+* AppEngine Cron task
+* Command pattern for request handling
+</code></pre>
+
+<ul>
+<li>Client tier:
+
+<ul>
+<li>Google GIN as dependency injection container on the client side</li>
+<li>Model-View-Presenter pattern on the client side</li>
+<li>EventBus to decouple components</li>
+<li>Command pattern for remote service calls</li>
+</ul>
+</li>
+<li>Unit Testing on both Client/Server side with mock objects</li>
+</ul>
+
+
+<p>Also I plan to rewrite the service layer with one of the alternate JVM language, such as Scala or Clojure, if I my schedule allows and I have enough motivation.</p>
+]]></content>
+  </entry>
+  
+</feed>

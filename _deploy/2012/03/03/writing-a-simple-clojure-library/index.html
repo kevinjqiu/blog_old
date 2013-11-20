@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Writing a Simple Clojure Library - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="I&#8217;ve been learning/using Clojure on and off for about 2 years. The lispy syntax isn&#8217;t a deterrent for me at all, in fact, I&#8217;m quite &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2012/03/03/writing-a-simple-clojure-library/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Writing a Simple Clojure Library</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-03T20:25:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&#8217;ve been learning/using Clojure on and off for about 2 years. The lispy syntax isn&#8217;t a deterrent for me at all, in fact, I&#8217;m quite fond of it and consider it very <a href="http://en.wikipedia.org/wiki/Homoiconicity">elegant</a>. However, it does take some time to get used to. I don&#8217;t use Clojure or anything remotely close in my day job, but I love to find something useful to implement using Clojure. In the past few days I found such niche.</p>
+
+<h2>Terminal colours</h2>
+
+<p>Ever wonder how some console applications can output coloured text? Most terminals and terminal emulators (think iTerm or konsole) support colour through a system of <a href="http://en.wikipedia.org/wiki/ANSI_escape_code">escape sequences</a>.</p>
+
+<p>An Escape Sequence starts with the ASCII code for the escape character (0x1b or 33). There a list of control characters you can specify after the escape character that controls the colour and style of the text after it. For example, sending &#8220;[31mfoo&#8221; to a terminal means &#8220;output red coloured text from now on&#8221;. Everything the terminal output will be coloured red, until the terminal reads another escape sequence, including &#8220;[ESC]0m&#8221;, which tells the terminal to reset the styles to the default.</p>
+
+<p>So I had this idea to implement this in Clojure as a library so that console application authors can use it to output stylized text from their application using idiomatic Clojure, and here comes <a href="https://github.com/kevinjqiu/lumiere">Lumiere</a>.</p>
+
+<h2>Implementing it in Clojure</h2>
+
+<h3>Design the interface</h3>
+
+<p>What&#8217;s our end goal here? We would like to output colour sequence wrapped text with Clojure function calls such as</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="nf">red</span> <span class="s">&quot;foo&quot;</span><span class="p">)</span> <span class="c1">; output foo in red colour</span>
+</span><span class='line'><span class="p">(</span><span class="nf">bg-green</span> <span class="s">&quot;bar&quot;</span><span class="p">)</span> <span class="c1">;&quot;bar&quot; with green background colour</span>
+</span><span class='line'><span class="p">(</span><span class="nf">bold</span> <span class="p">(</span><span class="nf">magenta</span> <span class="s">&quot;nyan cat&quot;</span><span class="p">))</span> <span class="c1">; bold and magenta</span>
+</span><span class='line'><span class="p">(</span><span class="nb">-&gt; </span><span class="s">&quot;nyan cat&quot;</span> <span class="nv">red</span> <span class="nv">bg-white</span> <span class="nv">bold</span><span class="p">)</span> <span class="c1">; use Clojure&#39;s &quot;thread macro&quot; to combine these functions, resulting in red foreground, white background and bold &quot;nyan cat&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Toolchain</h3>
+
+<p>I wrote a <a href="/2011/02/11/cake-the-yummy-clojure-build-system/">blog post</a> a year ago about how I liked Cake the Clojure build system alternative to the defacto Leiningen. The recent news on this is that Cake and Leiningen are merging. This time, I decided to use Leiningen from the start. Even though Leiningen hasn&#8217;t ported some of the Cake goodies, but I&#8217;m hoping they will get ported soon.</p>
+
+<h3>First working version:</h3>
+
+<p>With <code>lein new lumiere</code>, Leiningen generates the default project layout. By default, Leiningen generates <code>src/lumiere/core.clj</code> and <code>test/lumiere/core.clj</code>. Because Lumiere is such a small script, we don&#8217;t need the <code>'lumiere.core</code> namespace, rather I&#8217;d like the functions to be in the <code>'lumiere</code> namespace. The easiest way is to delete <code>src/lumiere/</code> folder and create <code>lumiere.clj</code> under src. Same goes for the test file.</p>
+
+<p>Following the spirit of TDD, off I went to write my first test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">ns </span><span class="nv">lumiere.test</span>
+</span><span class='line'>  <span class="p">(</span><span class="ss">:use</span> <span class="p">[</span><span class="nv">lumiere</span><span class="p">])</span>
+</span><span class='line'>  <span class="p">(</span><span class="ss">:use</span> <span class="p">[</span><span class="nv">clojure.test</span><span class="p">]))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="nf">deftest</span> <span class="nv">test-only-foreground</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">is</span> <span class="p">(</span><span class="nb">= </span><span class="s">&quot;&amp;#092;&amp;#048;33[30msome black text&amp;#092;&amp;#048;33[0m&quot;</span> <span class="p">(</span><span class="nf">black</span> <span class="s">&quot;some black test&quot;</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This tests that the correct sequences of characters are generated by the call to <code>(black "...")</code>. 33 is the ASCII code for .</p>
+
+<p>To make this test pass, I added this in <code>src/lumiere.clj</code>,</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">ns </span><span class="nv">lumiere</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">black</span> <span class="p">[</span><span class="nv">text</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;&amp;#092;&amp;#048;33[0m&quot;</span> <span class="mi">30</span> <span class="nv">text</span><span class="p">))</span> <span class="c1">; 30 is the code for black foreground.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This passes the tests, but obviously there&#8217;s room for abstraction:
+* the red foreground code is 31, green 32, etc&#8230;
+* the black background code is 40, red 41, green 42, etc&#8230;</p>
+
+<p>So here we go:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn- </span><span class="nv">colour</span> <span class="c1">; defn- makes this function private to the current namespace.</span>
+</span><span class='line'>  <span class="p">([</span><span class="nv">code</span> <span class="nv">is-bg?</span><span class="p">]</span> <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;&amp;#092;&amp;#048;33[%dm&quot;</span> <span class="p">(</span><span class="nb">+ </span><span class="p">(</span><span class="k">if </span><span class="nv">is-bg?</span> <span class="mi">40</span> <span class="mi">30</span><span class="p">)</span> <span class="nv">code</span><span class="p">)))</span>
+</span><span class='line'>  <span class="p">([</span><span class="nv">code</span><span class="p">]</span> <span class="p">(</span><span class="nf">colour</span> <span class="nv">code</span> <span class="nv">false</span><span class="p">)))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">black</span> <span class="p">[</span><span class="nv">text</span><span class="p">]</span> <span class="p">(</span><span class="nf">colour</span> <span class="mi">0</span><span class="p">))</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">red</span> <span class="p">[</span><span class="nv">text</span><span class="p">]</span> <span class="p">(</span><span class="nf">colour</span> <span class="mi">1</span><span class="p">))</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">bg-black</span> <span class="p">[</span><span class="nv">text</span><span class="p">]</span> <span class="p">(</span><span class="nf">colour</span> <span class="mi">0</span> <span class="nv">true</span><span class="p">))</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">bg-red</span> <span class="p">[</span><span class="nv">text</span><span class="p">]</span> <span class="p">(</span><span class="nf">colour</span> <span class="mi">1</span> <span class="nv">true</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Clojure supports &#8220;default&#8221; arguments through method overloading. Here we adjust the offset based on whether or not that colour is a foreground or background.</p>
+
+<h3>Second take: use macro to define declaratively create colour functions</h3>
+
+<p>One advantage of lispy syntax is the convergence of programming with meta-programming. If you read the core Clojure library code, you&#8217;ll find that Clojure defines a few special forms and most control structures are written in macros. In my case, however, I&#8217;m using macros to define colour/style functions in a declarative way. Some may argue it doesn&#8217;t justify using macro for this purpose, but I just want to practice writing macros, and it does make the public interface of the library a bit prettier.</p>
+
+<p>First off, again, we need to define what the end result should look like. I would still like the functions to remain the same, e.g., red, bg-red, black, bg-black, etc. However, defining these functions takes a lot of boilerplate code. I&#8217;d like to simply call <code>(defcolour BLACK 0)</code> or the like to generate the <code>black</code> and <code>bg-black</code> functions for me.</p>
+
+<p>Disclaimer: I&#8217;m a novice macro writer. Advanced readers, please hold your nose and tell me what I did wrong or any improvements could be made :)</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="k">def </span><span class="nv">RESET</span> <span class="s">&quot;&amp;#092;&amp;#048;33[0m&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="kd">defmacro </span><span class="nv">defcolour</span> <span class="p">[</span><span class="nv">colour-func-name</span> <span class="nv">bg-colour-func-name</span> <span class="nv">colour-code</span><span class="p">]</span>
+</span><span class='line'>  <span class="o">`</span><span class="p">(</span><span class="nf">do</span>
+</span><span class='line'>    <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+</span><span class='line'>      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="p">(</span><span class="nf">colour</span> <span class="o">~</span><span class="nv">colour-code</span><span class="p">)</span> <span class="nv">text#</span> <span class="nv">RESET</span><span class="p">))</span>
+</span><span class='line'>    <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">bg-colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+</span><span class='line'>      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="p">(</span><span class="nf">colour</span> <span class="o">~</span><span class="nv">bg-colour-code</span> <span class="nv">true</span><span class="p">)</span> <span class="nv">text#</span> <span class="nv">RESET</span><span class="p">))))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="nf">defcolour</span> <span class="nv">black</span> <span class="nv">bg-black</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="nf">defcolour</span> <span class="nv">red</span> <span class="nv">bg-red</span> <span class="mi">1</span><span class="p">)</span>
+</span><span class='line'><span class="p">(</span><span class="nf">defcolour</span> <span class="nv">green</span> <span class="nv">bg-green</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="c1">; etc...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A few special reader macros you need to know about when writing a macro:
+* tick (`) indicates the following code should be quoted and treated as a template.
+* tilda (~) indicates that the symbol should not be quoted (unquote), and should be replaced with the value in the current context.
+* hash (#) indicates that the macro system should generate a unique name for this symbol so it doesn&#8217;t conflict. Otherwise, it will be expanded to its fully qualified name.</p>
+
+<p>Run tests and because we didn&#8217;t change our public interface, everything all tests should still pass.</p>
+
+<h3>Take 3: combining styles</h3>
+
+<p>Alright, now that we have a fully functional style system, we can cascade the styles, e.g., <code>(red (bg-green "foo"))</code>. It work as expected when trying it in a REPL, but the character sequence it generates is &#8220;33[31m33[42mfoo33[0m33[0m&#8221; and surely it isn&#8217;t optimal. If we want to add styles such as bold, it&#8217;s going to get even worse.</p>
+
+<p>So, we need some abstraction here. When you call <code>(red "some text")</code> it shouldn&#8217;t generate the character sequence right away. Instead, the caller should decide when the sequence should be generated. We need some data structure to represent a &#8220;luminated&#8221; text. In Clojure we can define a &#8220;record&#8221;.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defrecord </span><span class="nv">Lumiere</span> <span class="p">[</span><span class="nv">text</span> <span class="nv">opts</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>opts</code> is a map with keys <code>:fg</code>, <code>:bg</code>, <code>:styles</code>. We also want to override the <code>toString()</code> method so when the user calls <code>(str lumiered-text)</code>, he will get the character sequence ready to be printed to the console. The downside of this is that we modified the interface, so we need to go back and change the tests so they call <code>(str (red "foo"))</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'>  <span class="p">(</span><span class="nf">is</span> <span class="p">(</span><span class="nb">= </span><span class="s">&quot;&amp;#092;&amp;#048;33[30msome black text&amp;#092;&amp;#048;33[0m&quot;</span> <span class="p">(</span><span class="nb">str </span><span class="p">(</span><span class="nf">black</span> <span class="s">&quot;some black test&quot;</span><span class="p">)))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To override <code>toString()</code>, we need to extend our Lumiere type to conform to the <code>IObject</code> protocol:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn- </span><span class="nv">ansi-escape-seq</span> <span class="p">[</span><span class="o">&amp;</span> <span class="nv">codes</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;&amp;#092;&amp;#048;33[%sm&quot;</span> <span class="p">(</span><span class="nb">join </span><span class="s">&quot;;&quot;</span> <span class="p">(</span><span class="nb">filter </span><span class="o">#</span><span class="p">(</span><span class="nb">not= </span><span class="nv">%</span> <span class="nv">nil</span><span class="p">)</span> <span class="nv">codes</span><span class="p">))))</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">(</span><span class="kd">defrecord </span><span class="nv">Lumiere</span> <span class="p">[</span><span class="nv">text</span> <span class="nv">fg</span> <span class="nv">bg</span> <span class="nv">styles</span><span class="p">]</span>
+</span><span class='line'>  <span class="nv">Object</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">toString</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>
+</span><span class='line'>    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">prefix</span> <span class="p">(</span><span class="nf">ansi-escape-seq</span> <span class="p">(</span><span class="ss">:fg</span> <span class="nv">this</span><span class="p">)</span> <span class="p">(</span><span class="ss">:bg</span> <span class="nv">this</span><span class="p">)</span> <span class="p">(</span><span class="ss">:styles</span> <span class="nv">this</span><span class="p">))]</span>
+</span><span class='line'>      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="nv">prefix</span> <span class="p">(</span><span class="ss">:text</span> <span class="nv">this</span><span class="p">)</span> <span class="nv">RESET</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next we need to let the colour/style functions return Lumiere object, rather than plain character sequence. There are two situations we need to adapt:</p>
+
+<ol>
+<li>When we first start decorating a text, text input is going to be a plain string. In this case, we need to create a Lumiere object with the text and options.</li>
+<li>When the return of a colour/style function is chained into another colour/style function, we need to modify the options of the Lumiere object.</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn- </span><span class="nv">adapt-lum</span> <span class="p">[</span><span class="nv">text</span> <span class="nv">option</span> <span class="nv">value</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">local-option-map</span> <span class="p">(</span><span class="nb">merge </span><span class="p">{</span><span class="ss">:fg</span> <span class="nv">nil</span> <span class="ss">:bg</span> <span class="nv">nil</span> <span class="ss">:styles</span> <span class="nv">nil</span><span class="p">}</span> <span class="p">{</span><span class="nv">option</span> <span class="nv">value</span><span class="p">})]</span>
+</span><span class='line'>    <span class="p">(</span><span class="nf">cond</span>
+</span><span class='line'>      <span class="p">(</span><span class="nb">instance? </span><span class="nv">String</span> <span class="nv">text</span><span class="p">)</span> <span class="p">(</span><span class="nf">Lumiere.</span> <span class="nv">text</span> <span class="p">(</span><span class="ss">:fg</span> <span class="nv">local-option-map</span><span class="p">)</span> <span class="p">(</span><span class="ss">:bg</span> <span class="nv">local-option-map</span><span class="p">)</span> <span class="p">(</span><span class="ss">:styles</span> <span class="nv">local-option-map</span><span class="p">))</span>
+</span><span class='line'>      <span class="p">(</span><span class="nb">instance? </span><span class="nv">Lumiere</span> <span class="nv">text</span><span class="p">)</span> <span class="p">(</span><span class="nb">assoc </span><span class="nv">text</span> <span class="nv">option</span> <span class="nv">value</span><span class="p">)</span>
+</span><span class='line'>      <span class="ss">:else</span> <span class="p">(</span><span class="nf">throw</span> <span class="p">(</span><span class="nf">java.lang.IllegalArgumentException.</span><span class="p">)))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and we need to modify the macros so <code>adapt-lum</code> helper is used:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defmacro </span><span class="nv">defcolour</span> <span class="p">[</span><span class="nv">colour-func-name</span> <span class="nv">bg-colour-func-name</span> <span class="o">^</span><span class="nv">Integer</span> <span class="nv">colour-code</span><span class="p">]</span>
+</span><span class='line'>  <span class="o">`</span><span class="p">(</span><span class="nf">do</span>
+</span><span class='line'>     <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+</span><span class='line'>       <span class="p">(</span><span class="nf">adapt-lum</span> <span class="nv">text#</span> <span class="ss">:fg</span> <span class="o">~</span><span class="nv">colour-name</span><span class="p">))</span>
+</span><span class='line'>     <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">bg-colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+</span><span class='line'>       <span class="p">(</span><span class="nf">adapt-lum</span> <span class="nv">text#</span> <span class="ss">:bg</span> <span class="o">~</span><span class="nv">bg-colour-name</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Publish to Clojar.org</h2>
+
+<p>Now that the library is in a relatively stable state. I&#8217;d like to publish this snapshot version to a repository. Clojars.org is the most popular clojure library repository. Register on clojars.org, add let them know your public key. Then do <code>lein pom &amp;&amp; lein deploy</code>, voilà!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-03-03T20:25:00-05:00" pubdate data-updated="true">Mar 3<span>rd</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/clojure/'>clojure</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2012/03/03/writing-a-simple-clojure-library/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2012/03/03/writing-a-simple-clojure-library/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2011/10/04/building-a-google-reader-plugin-using-chrome-extension/" title="Previous Post: Building a Google Reader plugin using Chrome extension">&laquo; Building a Google Reader plugin using Chrome extension</a>
+      
+      
+        <a class="basic-alignment right" href="/2012/04/07/realtime-notification-delivery-using-rabbitmq/" title="Next Post: Realtime notification delivery using rabbitmq">Realtime notification delivery using rabbitmq &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2012/03/03/writing-a-simple-clojure-library/';
+        var disqus_url = 'http://kevinjqiu.github.com/2012/03/03/writing-a-simple-clojure-library/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

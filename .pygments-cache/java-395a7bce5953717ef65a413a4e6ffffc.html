@@ -1,0 +1,13 @@
+<div class="highlight"><pre><span class="n">OperationBinding</span> <span class="nf">createFetchOperation</span><span class="o">()</span> <span class="o">{</span>
+
+    <span class="kd">final</span> <span class="n">OperationBinding</span> <span class="n">retval</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OperationBinding</span><span class="o">(</span><span class="n">DSOperationType</span><span class="o">.</span><span class="na">FETCH</span><span class="o">,</span> <span class="n">Urls</span><span class="o">.</span><span class="na">ISSUE_FETCH</span><span class="o">);</span>
+    <span class="n">retval</span><span class="o">.</span><span class="na">setDataFormat</span><span class="o">(</span><span class="n">DSDataFormat</span><span class="o">.</span><span class="na">JSON</span><span class="o">);</span>
+
+    <span class="n">retval</span><span class="o">.</span><span class="na">setDataProtocol</span><span class="o">(</span><span class="n">DSProtocol</span><span class="o">.</span><span class="na">POSTPARAMS</span><span class="o">);</span>
+
+    <span class="n">retval</span><span class="o">.</span><span class="na">setRecordXPath</span><span class="o">(</span><span class="s">&quot;/result&quot;</span><span class="o">);</span>
+
+    <span class="k">return</span> <span class="n">retval</span><span class="o">;</span>
+
+<span class="o">}</span>
+</pre></div>

@@ -1,0 +1,23 @@
+<div class="highlight"><pre><span class="nd">@PersistenceCapable</span><span class="o">(</span><span class="n">identityType</span><span class="o">=</span><span class="n">IdentityType</span><span class="o">.</span><span class="na">APPLICATION</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Rate</span> <span class="kd">implements</span> <span class="n">Serializable</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="o">-</span><span class="mi">4415279469780082174L</span><span class="o">;</span>
+
+    <span class="nd">@PrimaryKey</span>
+    <span class="nd">@Persistent</span><span class="o">(</span><span class="n">valueStrategy</span><span class="o">=</span><span class="n">IdGeneratorStrategy</span><span class="o">.</span><span class="na">IDENTITY</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">Long</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="nd">@Persistent</span>
+    <span class="kd">private</span> <span class="n">RateType</span> <span class="n">type</span><span class="o">;</span>
+
+    <span class="nd">@Persistent</span>
+    <span class="kd">private</span> <span class="n">Date</span> <span class="n">timeFetched</span><span class="o">;</span>
+
+    <span class="nd">@Persistent</span>
+    <span class="kd">private</span> <span class="n">Double</span> <span class="n">rate</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Rate</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">}</span>
+    <span class="c1">// ... getters and setters omitted</span>
+<span class="o">}</span>
+</pre></div>

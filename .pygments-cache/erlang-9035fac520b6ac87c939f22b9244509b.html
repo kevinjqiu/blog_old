@@ -1,0 +1,15 @@
+<div class="highlight"><pre><span class="nf">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="nv">To</span><span class="p">)</span> <span class="o">-&gt;</span>
+    <span class="k">case</span> <span class="p">(</span><span class="nv">To</span> <span class="o">-</span> <span class="nv">From</span><span class="p">)</span> <span class="k">of</span>
+         <span class="nv">SmallRange</span> <span class="k">when</span> <span class="nv">SmallRange</span> <span class="o">=&lt;</span> <span class="mi">1000</span> <span class="o">-&gt;</span>
+            <span class="nv">List</span> <span class="o">=</span> <span class="nn">lists</span><span class="p">:</span><span class="nf">seq</span><span class="p">(</span><span class="nv">From</span><span class="p">,</span> <span class="nv">To</span><span class="p">),</span>
+            <span class="nv">WorkerPid</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span> <span class="n">worker</span><span class="o">/</span><span class="mi">0</span><span class="p">),</span>
+            <span class="c">%% register the worker with tallier</span>
+            <span class="nv">TallierPid</span> <span class="o">!</span> <span class="p">{</span> <span class="n">self</span><span class="p">(),</span> <span class="nv">WorkerPid</span> <span class="p">},</span>
+            <span class="c">%% send the problem for the worker to work out</span>
+            <span class="nv">WorkerPid</span> <span class="o">!</span> <span class="p">{</span> <span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">List</span> <span class="p">};</span>
+        <span class="p">_</span> <span class="o">-&gt;</span>
+            <span class="nv">Mid</span> <span class="o">=</span> <span class="nn">mylib</span><span class="p">:</span><span class="nf">floor</span><span class="p">((</span><span class="nv">To</span> <span class="o">+</span> <span class="nv">From</span><span class="p">)</span> <span class="ow">div</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="nv">Mid</span><span class="p">),</span>
+            <span class="n">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">Mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nv">To</span><span class="p">)</span>
+    <span class="k">end</span><span class="p">.</span>
+</pre></div>

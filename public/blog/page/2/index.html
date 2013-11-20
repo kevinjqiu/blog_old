@@ -1,0 +1,1204 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="ver the past few months, I&#8217;ve been using Vim as my primary development tool at work and at home, and I have to say, I&#8217;m addicted to it! I &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/blog/page/2/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2011/04/20/spectrum-dot-vim-my-first-vim-plugin/">Spectrum.vim - My First Vim Plugin</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-04-20T20:09:00-04:00" pubdate data-updated="true">Apr 20<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>ver the past few months, I&#8217;ve been using Vim as my primary development tool at work and at home, and I have to say, I&#8217;m addicted to it! I&#8217;m thinking about writing a blog post of why I get hooked on <a href="http://walking-without-crutches.heroku.com/">walking without crutches</a>, but for this post, I&#8217;m just going to introduce you to my first plugin in Vim - <a href="https://github.com/kevinjqiu/spectrum.vim">Spectrum</a>.</p>
+
+<h2>Introduction</h2>
+
+<p>Spectrum is a vim colorscheme roulette. Ever getting tired of staring at the same colorscheme every day? Having hundreds of colorschemes in your repo but too lazy to deterministically pick one? Spectrum helps you by randomly pick colorschemes from your vim runtime path or from the <a href="http://inspiration.sweyla.com/code/">web</a>. From there, you have the chance of voting up a colorscheme so Spectrum will have a higher probability to pick it or voting down a colorscheme so you wouldn&#8217;t see it again.</p>
+
+<h2>Development</h2>
+
+<p>To be honest, I&#8217;m not a fan of <a href="http://en.wikipedia.org/wiki/Vimscript">Vimscript</a> - the language is not very expressive and doesn&#8217;t have a lot of object oriented features. Semi-fortunately, since Vim 7, they have added support for Python, Ruby and Perl scripts. I said &#8216;semi-fortunately&#8217; because the support isn&#8217;t too comprehensive. For most core vim features, you still have to resort to calling Vim commands to achieve them, but at least I don&#8217;t have to use Vim script for the most part.</p>
+
+<p>Spectrum is written in Python, and use the <code>vim</code> module to interact with the hosting Vim instance. There is a bit of bootstrapping to do if you want to separate most of the Python code out of the entry point vim script (see <a href="https://github.com/kevinjqiu/spectrum.vim/blob/master/plugin/spectrum.vim">here</a>). Many vim plugins written in Python require you to install the python code into your Python runtime before you can use them, but for a simple module like Spectrum, I opted for monkey patching syspath to include modules in the plugin folder.</p>
+
+<p>Anyhow, give it a try and hope you like it.</p>
+
+<p><a href="https://github.com/kevinjqiu/spectrum.vim">https://github.com/kevinjqiu/spectrum.vim</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2011/03/17/scala-simple-build-tool-not-so-simple-after-all/">Scala Simple Build Tool &#8211; Not So Simple After All</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-17T20:04:00-04:00" pubdate data-updated="true">Mar 17<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>Update:</strong> I got sbt working by building directly from the master branch from their github repo. The current version is 0.7.5. The tagged 0.9.4 version is actually an older version. Anyway, tried it and kinda loved it.</p>
+
+<p>This is just another late night rambling&#8230;I was trying to get a proper scala build system setup. I was using Maven scala plugin for a while, but longing for something simpler and more scalanic (is there such a word?). I was pretty <a href="2011/02/11/cake-the-yummy-clojure-build-system/">happy</a> with <a href="https://github.com/ninjudd/cake">Cake</a>, the Clojure build system and expected SBT to allow me to break away from using Maven to build Scala projects&#8230;boy, was I wrong&#8230;</p>
+
+<p>First off, when you google &#8216;simple build tool&#8217;, you get a link to the SBT <a href="http://code.google.com/p/simple-build-tool/">Google code home page</a>. Well, nothing wrong there, except the &#8220;latest&#8221; version on Google code was 0.7.4 and it was half a year ago&#8230;Maybe it&#8217;s not that outdated, so I downloaded it, followed <a href="http://code.google.com/p/simple-build-tool/wiki/Setup">this</a> instruction and setup my <code>~/bin/sbt</code> script. Running it, it asked me to setup projects, and it only supported up until Scala 2.7.7&#8230;Hrm, 2.8 was out for a while now, so obviously, SBT 0.7.4 isn&#8217;t the latest. Reading their home page more carefully, they&#8217;re moving the repository to <a href="https://github.com/harrah/xsbt">Github</a>. Awesome! I&#8217;d pick Github over Google Code any time too.</p>
+
+<p>Heading over to their Github repo, and found the latest stable version is 0.9.2. Good! So it should support Scala 2.8 now! Downloaded the zip, unzipped it, and of course it wasn&#8217;t executable. You need to build it. There&#8217;s a README.md, so quickly I less&#8217;ed it. For step 1, it asked me to go to the setup wiki page on Google Code (!), which is the steps I did setting up 0.7.4&#8230;I guess they&#8217;re using 0.7.4 as a bootstrapping build&#8230;Anyways, I did that. Step 2 was to run <code>sbt update "project Launcher" proguard "project Simple Build Tool" "publish-local"</code>. Of course it didn&#8217;t work. It&#8217;s complained 0.7.4 version of sbt-launch can&#8217;t download Scala 2.7.7 from any of the repository&#8230;bummer! But hey, I can download Scala 2.7.7 lib from Maven! So I quickly updated pom.xml of one of my projects to use Scala 2.7.7 and did an upgrade. Now 2.7.7 is happily in my local Maven repo. Ran that command again, hooray! It started to build, and judging by the number of packages it&#8217;s building, &#8220;simple&#8221; isn&#8217;t the first adjective that comes into my mind. Anyway, it&#8217;s building at least, so even if it&#8217;s a little complicated, so be it&#8230;Except&#8230;of course it broke half way&#8230; and why?</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[info]   Post-analysis: 107 classes.
+</span><span class='line'>[info] == Precompiled 2.7.7 / compile ==
+</span><span class='line'>[info] 
+</span><span class='line'>[info]    Precompiled 2.8.0 / compile ...
+</span><span class='line'>[info] 
+</span><span class='line'>[info] == Precompiled 2.8.0 / compile ==
+</span><span class='line'>[info]   Source analysis: 9 new/modified, 0 indirectly invalidated, 0 removed.
+</span><span class='line'>[info] Compiling main sources...
+</span><span class='line'>[warn] there were deprecation warnings; re-run with -deprecation for details
+</span><span class='line'>[warn] one warning found
+</span><span class='line'>[info] Compilation successful.
+</span><span class='line'>[info]   Post-analysis: 108 classes.
+</span><span class='line'>[info] == Precompiled 2.8.0 / compile ==
+</span><span class='line'>java.lang.OutOfMemoryError: PermGen space
+</span><span class='line'>        at java.lang.ClassLoader.defineClass1(Native Method)
+</span><span class='line'>        at java.lang.ClassLoader.defineClassCond(ClassLoader.java:632)
+</span><span class='line'>        at java.lang.ClassLoader.defineClass(ClassLoader.java:616)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>You&#8217;ve gotta be kidding me! I set <code>-Xmx512M</code> and it&#8217;s not enough? And why is it building every version of Scala <strong>from source</strong>?? Is there something called a&#8230;JAR?</p>
+
+<p>Anyway, increased <code>-Xmx</code> from 512 to 1024M, ran again, wait, and same thing happened again! Out of PermGen space&#8230;urrgh&#8230;</p>
+
+<p>I decided to give up, at least for the day&#8230; SBT is anything but simple, at least from my experience. I know it&#8217;s open source and people put efforts into it without compensation, so I shouldn&#8217;t be critical about it. I&#8217;ll give it a try again, and hopefully it&#8217;s worth the time investment.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2011/03/02/write-sudoku-solver-in-clojure/">Write Sudoku Solver in Clojure</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-03-02T20:00:00-05:00" pubdate data-updated="true">Mar 2<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>&#8230;yeah, because the world just needs another <a href="http://en.wikipedia.org/wiki/Sudoku">Sudoku</a> solver. Well, I&#8217;m not trying to solve world hunger with it, but just an attempt to practice <a href="http://clojure.org">clojure</a>, I took (read: stole) Peter Norvig&#8217;s <a href="http://norvig.com/sudoku.html">sudoku solver</a> algorithm (written in Python) and adapted it into Clojure. I put it up on Github under <a href="https://github.com/kevinjqiu/sudoku-clj">sudoku-clj</a>. The algorithm itself isn&#8217;t <em>that</em> hard to understand. The porting to a lisp-y syntax made the code a little longer than its Python counterpart. I&#8217;m sure seasoned Lisp/Clojure users can point out dozens of places where more idiomatic/succinct syntax can be used (If you happen to be one, do tell, by the way).</p>
+
+<p>Here&#8217;s a few things I noticed:</p>
+
+<ul>
+<li><p>Mutable states in clojure are captured using <code>ref</code>s. The object itself (in this case, the grid, which is a hash map) doesn&#8217;t mutate, but the reference is changed to point to different grid objects that represent a configuration at a given step.</p></li>
+<li><p>Clojure sequences are Lazy. A few times I tried to print out the current state (remaining digits) of the square, but if you simply do <code>(println seq)</code>, you will get a Java-ish <code>toString()</code> output of the sequence object. You need to force the lazy sequence to be evaluated by <code>(println (apply str seq))</code>. Needless to say, you lose the advantage of lazy sequences, so use it sparingly.</p></li>
+<li><p>Python&#8217;s list comprehension syntax is fabulous. Clojure&#8217;s counterpart for comprehension doesn&#8217;t feel as elegent, nor is map a function onto a sequence to achieve that (the way I used it)</p></li>
+<li><p><a href="/2011/02/11/cake-the-yummy-clojure-build-system/">Cake</a> is yummy!</p></li>
+<li><p>The performance isn&#8217;t great&#8230;I must have done something wrong, but the easy sudoku grid took about 2 seconds (with the JVM already booted), while the Python algorithm solves it in a fraction of a second.</p></li>
+<li><p>Because assign/eliminate are mutually recursive, my current implementation uses the naive way of doing recursion, i.e., let the stack grow. Clojure has a function <code>trampoline</code>, which adds a level of indirection that applies to mutually recursive functions. It uses <code>recur</code> at tail end position (basically translates the recursive calls into loops) which doesn&#8217;t fill your process&#8217;s stack. It might not be obvious (to me anyways) how one can do that with a few levels of function calls in between assign/eliminate, but I&#8217;m sure there&#8217;s a way</p></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2011/02/11/cake-the-yummy-clojure-build-system/">Cake - the Yummy Clojure Build System</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-02-11T19:56:00-05:00" pubdate data-updated="true">Feb 11<span>th</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>About 10 minutes ago I heard about <a href="https://github.com/ninjudd/cake">cake</a> clojure build system, and gave it a try. And 10 minutes later, it won me over! Wow, it addresses all the pain points of <a href="https://github.com/technomancy/leiningen">leiningen</a>.</p>
+
+<h2>BLAZINGLY FAST!!!</h2>
+
+<p>Sorry for using all CAPS but I&#8217;m very excited about this improvement over leiningen &#8211; OK, it may not be the fault of leiningen that JVM cold startup time is non-trivial but hey, someone came up with an idea of having a long running JVM process in the background, so subsequent clojure tasks reuse the same JVM instance. Cake folks integrated that nicely. It takes about 10-15 seconds to boot up a JVM but subsequent cake tasks or execution of clojure code is virtually instant! Comparing to leiningen, which doesn&#8217;t take this approach and every single task (such as common ones like lein test) takes around 5 seconds. This adds up quickly and makes you less efficient. The speed improvement alone is enough for me to switch to cake.</p>
+
+<h2>Advanced REPL functionalities: tab completion, history</h2>
+
+<p>It just works. Very useful for having instant feedbacks while exploring the language and API. No more manually adding jLine to your classpath or hack around tab completion wrapper&#8230;It just works! (I know I said it already)</p>
+
+<h2>run clojure files directly</h2>
+
+<p>OK, leiningen can do this too, but through <a href="https://github.com/sids/lein-run">plugin</a>. I feel this is a very handy functionality, which probably should be included in the core.</p>
+
+<h2>autotest</h2>
+
+<p>Detects your code change and automatically run your test suites! Sweet.</p>
+
+<h2>compatible with leiningen project definition files</h2>
+
+<p>Cake understand <code>project.clj</code>, so I don&#8217;t need to do anything for my existing leiningen projects. Change directory to the project and <code>cake</code> away :D</p>
+
+<p>Overall, it just works out of the box. No more mucking around with dev-dependencies and other chores and let you focus on what you&#8217;d love to do.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2011/01/02/new-years-resolution/">New Year&#8217;s Resolution</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2011-01-02T19:47:00-05:00" pubdate data-updated="true">Jan 2<span>nd</span>, 2011</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>2011 here we come! In the spirit of continual learning, I&#8217;m going to write down the technology I&#8217;d love to learn this year.</p>
+
+<h2><a href="http://haskell.org" title="">Haskell</a></h2>
+
+<p>Now that I&#8217;m more interested in functional languages, I&#8217;d love to look into this &#8220;pure&#8221; functional language that inspired countless other ones of its kind.</p>
+
+<h2><a href="http://liftweb.net">Lift</a></h2>
+
+<p>Last year I scratched the surface of <a href="http://www.scala-lang.org">Scala</a>, a hybrid JVM language. I&#8217;m very fond of it, and think it has tremendous potential. Twitter and FourSquare are already using Scala, so it has been put to the test of some pretty high-profile usages.  Lift is the most popular web framework built on top of Scala. It claims to have the rapid application development benefits from Rails and the benefits from statically typed language.</p>
+
+<h2>More advanced features of <a href="http://clojure.org">Clojure</a></h2>
+
+<p>In the past two years, I explored Clojure and on off. I love the Lisp idea of <a href="http://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a> which unifies programming and meta-programming. That said, I haven&#8217;t been using macro in Clojure too much, and there are other cool ideas of Clojure I haven&#8217;t been able to explore deeply, such as protocols and <a href="http://en.wikipedia.org/wiki/Software_transactional_memory">software transactional memory</a></p>
+
+<h2><a href="http://www.ruby-lang.org/en/">Ruby</a> and <a href="http://rubyonrails.org/">Rails</a></h2>
+
+<p>For the past few years, I&#8217;ve been refraining myself from learning Ruby, because I&#8217;m already quite adept at Python, and I feel I should be learning languages that are different from what I already know. However, the more I heard about Ruby and its ideas, the more interesting it appears to me. On top of that, Rails 3 has come out, and it appears to have improved significantly. Moreover, there are a lot of advancement in the Ruby VM world such as JRuby, which means Ruby applications don&#8217;t have to run on the old and dreadful (hear-say) MRI. I wouldn&#8217;t mind taking Ruby and Rails out for a spin this year.</p>
+
+<h2><a href="http://www.android.com/">Android</a></h2>
+
+<p>Last year I got an HTC Legend Android phone, with the intention of developing for Android at some point of time. It didn&#8217;t work out that way, though, but Android continues to be a very interesting and fast growing platform. Mobile <em>is</em> the future, and I&#8217;d like to poke into the Android world this year, primarily because it&#8217;s open source. iOS is equally interesting technically, but I don&#8217;t own a Mac and I don&#8217;t like the idea of paying Apple $99 for SDK even though I don&#8217;t intend to publish on AppStore.</p>
+
+<p>I think that&#8217;s enough for a year&#8230;or is it? There&#8217;s a few more technologies I wish to learn or keep up with:</p>
+
+<h2>GWT and Google App Engine</h2>
+
+<p>2 years of professional GWT development made me a firm fan of this Google technology. I got out of GWT for different reasons, but I love the engineering effort they put into GWT. It may not take over the world but it&#8217;s definitely a solid player in the front-end web development arena. Especially now they integrated with the Spring framework and made deploying to App Engine easy, it may pick up more traction this year. I think the Java language is both the pros and cons of GWT. I&#8217;d love to see an alternative language (Scala) being implemented for GWT, but it may not happen any time soon.</p>
+
+<h2>A &#8220;NoSQL&#8221; database</h2>
+
+<p>Let&#8217;s face it, &#8220;NoSQL&#8221; is a terrible name, but it grabs people&#8217;s attention. I flirted with <a href="http://couchdb.apache.org/">CouchDB</a> briefly last year, and would love to continue this journey this year. Also, <a href="http://www.mongodb.org/">MongoDB</a> seems interesting too.</p>
+
+<h2>Node.js</h2>
+
+<p>It&#8217;s the least I think I&#8217;d learn this year. It&#8217;s hot in the geekdom right now, and it has its value, for example, having both the server and client side written in Javascript eliminates the need to implement the validation logic in two different languages. However, I&#8217;m just not a big fan of Javascript. I think it&#8217;s a language that&#8217;s by a chain of serendipitous events became the world&#8217;s most widely used language. It carries a huge historical burden, and although it has cool features, some other modern languages have them too and do better. Regardless, given the stardom status of Node.js, it deserves some looking into :)</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2010/10/22/use-python-decorator-to-curry-functions/">Use Python Decorator to Curry Functions</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-22T20:06:00-04:00" pubdate data-updated="true">Oct 22<span>nd</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>It&#8217;s been a while since the last time I wrote about Python. This morning, I was listening to a podcast on my way to work. They were discussing functional programming and dynamic languages&#8230;I learned Python before I went into Computer Science, and then I learned about functional programming and through learning of Scala and Clojure, my functional programming concepts have been enriched. As I was listening, it suddenly appeared to me that there isn&#8217;t a way in Python to <a href="http://en.wikipedia.org/wiki/Currying">curry</a> a function. Not that it&#8217;s critical to everyday development, but wouldn&#8217;t it be neat if I can curry a function in Python?</p>
+
+<p>Then the hosts of the podcast discussed how dynamic languages are so flexible that you can pretty much do anything to it. &#8220;You can take a function as parameter, return a function from a function, and so on.&#8221; Hey, isn&#8217;t that what Python&#8217;s <a href="http://www.artima.com/weblogs/viewpost.jsp?thread=240808">decorator</a> can do? I learned decorators before, but I haven&#8217;t used it beyond the scope of creating properties and certainly haven&#8217;t written any decorators. I thought this would be a good exercise for learning decorators.</p>
+
+<p>Here&#8217;s a simple example of what function currying: suppose you have a method</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Then calling <code>add(1,2)</code> should be the same as <code>add(1)(2)</code>. <code>add(1)</code> is what they call a partially applied function. It&#8217;s a function that takes one parameter.</p>
+
+<p>Our goal here is to write a decorator &#8220;curried&#8221; that takes a function with n parameters and transform it in a way that can be applied n times and get the final result.</p>
+
+<p>We&#8217;ll start with unit tests first:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">import</span> <span class="nn">unittest</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">CurryTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">test_with_no_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="nd">@curried</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">do_nothing</span><span class="p">():</span>
+</span><span class='line'>            <span class="k">return</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">do_nothing</span><span class="p">())</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">test_with_int_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="nd">@curried</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">add_int</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">add_int</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span><span class="mi">2</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">test_with_str_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span class='line'>        <span class="nd">@curried</span>
+</span><span class='line'>        <span class="k">def</span> <span class="nf">add_str</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+</span><span class='line'>            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;ab&quot;</span><span class="p">,</span> <span class="n">add_str</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)(</span><span class="s">&quot;b&quot;</span><span class="p">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So we make sure that a currying on a function takes no parameter is valid but should be a pass through, and also the &#8220;curried&#8221; decorator can be applied to any function with arguments (excluding positional arguments and keyword arguments)</p>
+
+<p>A decorator is simply a function that takes a function as parameter:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">curried</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+</span><span class='line'>  <span class="k">pass</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and <code>@curried</code> is simply a syntactic sugar for:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="o">...</span><span class="p">):</span> <span class="o">...</span>
+</span><span class='line'><span class="n">fn</span><span class="o">=</span><span class="n">curried</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>So, now we can write <code>curried</code> decorator.
+To make the test for function with no argument pass, in <code>curried()</code> function, we can test to see if fn has arguments. Python&#8217;s standard library provides <code>inspect.getargspec</code> method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">curried</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">argspec</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">fn</span>
+</span><span class='line'>  <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>    <span class="c"># later</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the first test passes.</p>
+
+<p>For the other two cases, here&#8217;s the strategy. In Python, when a class defines <code>__call__</code> method, the instance of that class is said to be &#8220;callable&#8221;. For instance:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>  <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">arg</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">f</span><span class="o">=</span><span class="n">A</span><span class="p">()</span>
+</span><span class='line'><span class="n">f</span><span class="p">(</span><span class="s">&quot;echo&quot;</span><span class="p">)</span>  <span class="c"># this gives you &quot;echo&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is very similar to Scala&#8217;s <code>apply()</code> function. Now that we have this in our inventory, we can define a <code>PartialFunction</code> class, take all the required parameters of the original function, and allow them to be applied one at a time. So the <code>__call__</code> method of PartialFunc will look like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+</span><span class='line'>  <span class="c"># Xxx</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If all the required parameters are passed in, <code>PartialFunc</code> should evaluate the original function with the complete argument list. Otherwise, <code>PartialFunc</code> stores the parameter in an instance variable, and returns itself.</p>
+
+<p>Here&#8217;s the complete code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">class</span> <span class="nc">PartialFunc</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">argspec</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">fn</span> <span class="o">=</span> <span class="n">fn</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">argspec</span> <span class="o">=</span> <span class="n">argspec</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+</span><span class='line'>        <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+</span><span class='line'>            <span class="n">arglist</span> <span class="o">=</span> <span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;self.args[</span><span class="si">%d</span><span class="s">]&quot;</span><span class="o">%</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))])</span>
+</span><span class='line'>            <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="s">&quot;self.fn(&quot;</span> <span class="o">+</span> <span class="n">arglist</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">return</span> <span class="bp">self</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and the curried decorator:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="k">def</span> <span class="nf">curried</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">argspec</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getargspec</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">argspec</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">fn</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">PartialFunc</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">argspec</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It&#8217;s pretty straightforward. When the parameters are complete, I construct a python statement that calls the original function with the complete argument list, and then pass the statement into an eval statement. I know evals are evil, but I can&#8217;t find a way in Python to dynamically change the signature of the original method and make it accept a variable length argument (varargs).</p>
+
+<p>So this is it. It&#8217;s quite simple. Python methods can have varargs and keyword args, the situation gets a little more complicated. The thing is, both varargs and keyword args are not mandatory, so it&#8217;s hard for the curried function to know whether the argument list has been completed&#8230;Also, if you take default values into account, it could get even more complicated.</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2010/10/07/my-impression-on-scala-so-far/">My Impression on Scala So Far</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-07T20:01:00-04:00" pubdate data-updated="true">Oct 7<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I&#8217;ve been exploring Scala on and off for some time now. Here&#8217;s my highly subjective and very limited impression of Scala.</p>
+
+<p>What I like about Scala:</p>
+
+<h2>0) It&#8217;s statically-typed language.</h2>
+
+<p>That&#8217;s right! I don&#8217;t care what you ninjas say. As much as I love dynamic languages, I just prefer statically typed language for big projects. The benefit of having type information is enormous for a project with a large code base. I know you have to write unit tests for it anyways, but when 80% of your unit test code is checking types, it&#8217;s just counter-productive.</p>
+
+<h2>1) The ability to combine functional programming style with OOP.</h2>
+
+<p>This is what Scala is known for - a hybrid language that boasts the better in both OOP world and FP world. I&#8217;m not a functional programming purist, but I think Scala did a good job blending the functional programming elements into OOP. Writing Scala programs, I find myself much more empowered to be able to choose from both styles where I see fit. The ability to pass functions around and apply high order functions can significantly reduce boilerplate code and visual clutter.</p>
+
+<h2>2) The ability to create your own control flow (well, sort of).</h2>
+
+<p>I had a <a href="http://reminiscential.wordpress.com/2010/09/29/scala-use-function-currying/">blog post</a> about how to use function curry to create a customized control flow. This is very empowering and yet, it&#8217;s not an one-off syntactic sugar that&#8217;s sprinkled randomly into the language like some other language would do. Customization of control flow is a result of combining generic language features (such as currying, by-name parameter, implicit conversion, etc).</p>
+
+<h2>3) Object instead of static</h2>
+
+<p>Scala does away with the Java static keyword. Instead, it provides &#8220;object&#8221; keyword to define a class that only has one instance. It has the same power as singleton design pattern, without the extra boilerplate code. (if you think implementing singleton in Java is simple, think again. Especially in the multi-threaded context). Also, you can use the same construct to define &#8220;companion&#8221; objects, which can be used to implement the factory pattern, and put in miscellaneous methods, implicit conversion methods and so on. Extremely powerful yet elegant.</p>
+
+<h2>4) Operator overloading (well, sort of).</h2>
+
+<p>OK, it&#8217;s not exactly operator overloading - Scala allows many non-alpha-numeric characters in the method name, so operators are essentially methods. duh! if you think about it&#8230;why should + be treated any different from <code>add()</code>? Being able to use special characters in method names makes code easy to understand. However, I&#8217;m a bit disappointed that question mark <code>?</code> cannot be used in method names&#8230;One of the things I liked about LISP is you can define a function <code>(odd? (x) (...))</code> and readers immediately know this function returns a boolean. I don&#8217;t have to ponder whether I should name it <code>isOdd()</code> or <code>hasChildren()</code>. Anyway&#8230;</p>
+
+<h2>5) Traits</h2>
+
+<p>In most cases, multiple inheritance is manageable. Seems Java threw the baby out with the bath water - rejecting multiple inheritance completely. It&#8217;s ironic that the AOP guys cracks open Java classes in the byte code level to do the &#8220;mixins&#8221;&#8230;With Scala, this seems to be natural.</p>
+
+<h2>6) Built-in parser-combinator library</h2>
+
+<p>It&#8217;s easy to do some non-mission critical parsing using the Scala standard library. The library itself is implemented as an internal DSL such that writing parser rules feels like writing EBNF directly.</p>
+
+<p>Here&#8217;s what&#8217;s not so hot for me so far:</p>
+
+<h2>1) The generics still is obtrusive sometimes.</h2>
+
+<p>That said, however, it&#8217;s vastly superior than Java&#8217;s generics system with far better type inferencing. But sometimes, you still have to write down a lot of types especially on a parameterized method. What&#8217;s worse is because Scala is more strict than Java wrt types, you cannot ignore generic types the way you can in Java code. Moreover, because Scala runs on JVM, and because of type-erasure, you still can&#8217;t write code such as val t = new T()&#8230;although we can&#8217;t blame this on Scala.</p>
+
+<h2>2) The collection library.</h2>
+
+<p>For each collection data structure, Scala has the mutable implementation, immutable implementation, and the native Java Collection Library. If you&#8217;re writing code that calls Java library, very often you have to wrap JCL lists/maps/sets into the Scala ones, because you want to use the nice functional features Scala provides. I&#8217;m not smart enough to know a better solution to this, I&#8217;m just merely pointing out a sore spot. Clojure has a very clever and elegant way of integrating JCL data structures into Clojure code, but since Clojure and Scala are vastly different, I don&#8217;t know how relevant this is.</p>
+
+<h2>3) Start up time</h2>
+
+<p>One of Scala&#8217;s goal is to be able to both scale up and scale down. Scala programs can be run as scripts by the interpreter, but it can&#8217;t compete with Python or Ruby in terms of development turn-around time in terms of scripting. Again, this is because of the dreadful JVM startup process.</p>
+
+<h2>4) Lack of good tooling</h2>
+
+<p>The best Scala development environment I found so far is the Scala plugin for IntelliJ. It&#8217;s still not great for debugging, but for coding and integration with Maven and such, it&#8217;s great. The Eclipse plugin lags significantly, despite having built a brand new website and seemingly having more resource pour into it&#8230;I know I shouldn&#8217;t be overly critical of a community effort, but it&#8217;s just frustrating that it can&#8217;t even do auto import of classes&#8230;</p>
+
+<p>Overall, I think Scala really has the potential to become a big name in the programming language landscape. It can do everything Java can and does better. It has so much features that Java doesn&#8217;t dare to add to keep backward compatibility or keep the language dead simple or politics or whatever reason&#8230;</p>
+
+<p>Scala is not a hype, but in order to be adopted more rapidly, I think it needs to</p>
+
+<ol>
+<li><p>Stablize the language and core library.</p></li>
+<li><p>Tooling, tooling, tooling! Seriously.</p></li>
+</ol>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2010/09/29/use-function-currying-to-reduce-repetition-and-make-code-clean/">Use Function Currying to Reduce Repetition and Make Code Clean</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-09-29T19:56:00-04:00" pubdate data-updated="true">Sep 29<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Lately, I&#8217;ve been writing a parser using the Scala parser-combinator framework to parse some saves from a game. As a responsible programmer (:P), I write unit tests for each rule. However, I found myself having to write the following code over and over again:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nd">@Test</span>
+</span><span class='line'><span class="k">def</span> <span class="n">testRule1</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">parserRule</span><span class="o">.</span><span class="n">apply</span><span class="o">(</span><span class="k">new</span> <span class="nc">CharSequence</span><span class="o">(</span><span class="s">&quot;someInput&quot;</span><span class="o">))</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">Success</span><span class="o">(</span><span class="n">result</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;expected&quot;</span><span class="o">,</span> <span class="n">result</span><span class="o">)</span>
+</span><span class='line'>      <span class="cm">/* other asserts if the result is a collection of something else */</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">NoSuccess</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">fail</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It&#8217;s worth noting that you cannot pass in a string value to a <code>Parser</code>. A parser expects a <code>CharSequence</code> <code>CharSequenceReader</code> object. Luckily, with Scala, you can define implicit conversion to turn a string into a <code>CharSequence</code> <code>CharSequenceReader</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">implicit</span> <span class="k">def</span> <span class="n">str2charSeqReader</span><span class="o">(</span><span class="n">v</span><span class="k">:</span><span class="kt">String</span><span class="o">)</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">CharSequenceReader</span><span class="o">(</span><span class="n">v</span><span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Another goody Scala offers is that <code>obj.apply(arg)</code> method can be invoked by <code>obj(arg)</code>, so the above code becomes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="cm">/* ... */</span>
+</span><span class='line'><span class="n">parserRule</span><span class="o">(</span><span class="s">&quot;someInput&quot;</span><span class="o">)</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'><span class="cm">/* ... */</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It&#8217;s much cleaner.</p>
+
+<p>However, the matching part is not clean still. It&#8217;s not that bad for a single test case, but it&#8217;s hardly a good practice to copy/paste it all over the test code base. We need to refactor this. The first thing comes to mind is to extract the matching part into a separate method, and let the caller provide the assertion part. Because Scala is a functional language, we can declare the method takes a function as a parameter, instead of using the delegate pattern, creating another class to encapsulate the method to be called, as you would do in Java:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">tryMatch</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">pr</span><span class="k">:</span><span class="kt">ParseResult</span><span class="o">[</span><span class="kt">T</span><span class="o">],</span> <span class="n">f</span><span class="k">:</span><span class="o">(</span><span class="kt">T</span><span class="o">)=&gt;</span><span class="nc">Unit</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">pr</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">Success</span><span class="o">(</span><span class="n">r</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">f</span><span class="o">(</span><span class="n">r</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">NoSuccess</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">fail</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the consumer (the test code) looks like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nd">@Test</span>
+</span><span class='line'><span class="k">def</span> <span class="n">test1</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">tryMatch</span><span class="o">(</span><span class="n">rule1</span><span class="o">(</span><span class="s">&quot;input&quot;</span><span class="o">),</span> <span class="o">(</span><span class="n">result</span><span class="o">)=&gt;{</span><span class="n">assertEquals</span><span class="o">(</span><span class="s">&quot;expected&quot;</span><span class="o">,</span><span class="n">result</span><span class="o">)})</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It&#8217;s better, except that when you have multiple assert* methods need to be called, it quickly becomes ugly:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nd">@Test</span>
+</span><span class='line'><span class="k">def</span> <span class="n">test2</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">tryMatch</span><span class="o">(</span><span class="n">listRule</span><span class="o">(</span><span class="s">&quot;1,2,3,4&quot;</span><span class="o">),</span> <span class="o">(</span><span class="n">result</span><span class="o">)=&gt;{</span><span class="n">assertEquals</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span><span class="n">result</span><span class="o">(</span><span class="mi">0</span><span class="o">));</span><span class="n">assertEquals</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span><span class="n">result</span><span class="o">(</span><span class="mi">1</span><span class="o">));</span><span class="n">assertEquals</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span><span class="n">result</span><span class="o">(</span><span class="mi">2</span><span class="o">));</span><span class="n">assertEquals</span><span class="o">(</span><span class="mi">4</span><span class="o">,</span><span class="n">result</span><span class="o">(</span><span class="mi">3</span><span class="o">))})</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To do better, we can use <a href="http://en.wikipedia.org/wiki/Currying">function currying</a>. I read about function currying before, but not until now did it dawn on me that I can use this technique to make my code look cleaner. Basically, currying means that a function with n parameters is the same as the function being applied one parameter at a time in succession. e.g., function <code>add(x1:Int,x2:Int,...,xn:Int)</code> adds all its parameters. <code>add(1,2)=[add(1)](2)</code>, where <code>add(1)</code> becomes a partially applied function that takes an integer and returns an integer. Then the partial function is applied to the second parameter which gives the eventual result.</p>
+
+<p>This is all very theoretical, but the practical implication is that we can transform <code>tryMatch()</code> method shown above from a method with 2 parameters into a curried function. Why? Because with Scala, when you have a method that only takes a single parameter (as is the case with the partially applied function), you can replace parentheses with curly brackets! Let&#8217;s see how it works:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">tryMatch</span><span class="o">[</span><span class="kt">T</span><span class="o">](</span><span class="n">pr</span><span class="k">:</span><span class="kt">ParseResult</span><span class="o">[</span><span class="kt">T</span><span class="o">])(</span><span class="n">f</span><span class="k">:</span><span class="o">(</span><span class="kt">T</span><span class="o">)=&gt;</span><span class="nc">Unit</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">pr</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">Success</span><span class="o">(</span><span class="n">r</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">f</span><span class="o">(</span><span class="n">r</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">NoSuccess</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">fail</span><span class="o">(</span><span class="n">msg</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Basically, we break the two parameter definitions. This creates a PartialFunction in Scala. No other code needs to be changed at all. Now we can call tryMatch like this:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="nd">@Test</span>
+</span><span class='line'><span class="k">def</span> <span class="n">testList</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">tryMatch</span><span class="o">(</span><span class="n">listRule</span><span class="o">(</span><span class="s">&quot;1 2 3&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">result</span> <span class="k">=&gt;</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">assertEquals</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="n">result</span><span class="o">(</span><span class="mi">0</span><span class="o">))</span>
+</span><span class='line'>      <span class="n">assertEquals</span><span class="o">(</span><span class="mi">2</span><span class="o">,</span> <span class="n">result</span><span class="o">(</span><span class="mi">1</span><span class="o">))</span>
+</span><span class='line'>      <span class="n">assertEquals</span><span class="o">(</span><span class="mi">3</span><span class="o">,</span> <span class="n">result</span><span class="o">(</span><span class="mi">2</span><span class="o">))</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is like creating your own control flow (like try-catch-finally). Ain&#8217;t that neat?</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2010/07/23/finding-happy-numbers-using-scala/">Finding Happy Numbers Using Scala</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-07-23T19:48:00-04:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>The problem was posted on <a href="http://programmingpraxis.com/2010/07/23/happy-numbers/">Programming Praxis</a>. The algorithm itself is pretty straightforward, anyone can do it with a few if/else/fors, but to coerce myself to think functionally, I decide to practice writing it in <a href="http://www.scala-lang.org">Scala</a>.</p>
+
+<p>A number is a happy number if the sum of square of its digits eventually arrive at 1. For example, 7=&gt;7<sup>2</sup>=49=&gt;4<sup>2</sup>+9<sup>2</sup>=97=&gt;9<sup>2</sup>+7<sup>2</sup>=&gt;130=1<sup>2</sup>+3<sup>2</sup>+0<sup>2</sup>=10=&gt;1<sup>2</sup>+0<sup>2</sup>=1, so 7 is a happy number. 17 is not a happy number because by applying the above process, it goes into a loop.</p>
+
+<p>Step1: calculating the sum of squares of a number</p>
+
+<p>To get a list of numbers from a given number, we can first convert the number into a string, and then map every character of the string to its corresponding integer value. A more mathematical way is to divide the number continually by 10 until the original number becomes 0, adding the remainder to a list each time&#8230;The first method is easier to visualize, so here it goes:
+<code>n.toString.toCharArray.map{digit=&gt;Integer.valueOf(""+digit)}</code></p>
+
+<p>It&#8217;s quite wordy but I&#8217;ve yet to find a better way. I&#8217;m pretty sure there is so if you know, do inform me.</p>
+
+<p>Now I need to square each item in the list. So modify the above statement:
+<code>n.toString.toCharArray.map{digit=&amp;gt;Math.pow(Integer.valueOf(""+digit).doubleValue,2.0)}</code></p>
+
+<p>One thing bothers me is that I have to explicitly call <code>someInt.doubleValue</code>&#8230;I thought Scala does the implicit conversion for me? Then I realized <code>Integer.valueOf(...)</code> gives me <code>java.lang.Integer</code>, not <code>scala.lang.Int</code>. So I have to write a implicit conversion function myself:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">implicit</span> <span class="k">def</span> <span class="n">integer2double</span><span class="o">(</span><span class="n">i</span><span class="k">:</span><span class="kt">Integer</span><span class="o">)</span><span class="k">:</span><span class="kt">Double</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">doubleValue</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now I can get rid of the hideous <code>someInt.doubleValue</code>.</p>
+
+<p>Since we&#8217;re doing implicit conversion already, why not just implicitly convert a numeric character to a double so that it can be accepted by <code>Math.pow</code>?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">implicit</span> <span class="k">def</span> <span class="n">char2double</span><span class="o">(</span><span class="n">ch</span><span class="k">:</span><span class="kt">Char</span><span class="o">)</span><span class="k">:</span><span class="kt">Double</span> <span class="o">=</span> <span class="nc">Integer</span><span class="o">.</span><span class="n">valueOf</span><span class="o">(</span><span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">ch</span><span class="o">).</span><span class="n">doubleValue</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the code can be shortened to</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Isn&#8217;t that sweet? Implicit conversion is cool but it&#8217;s easy to get carried away and do everything implicit, which makes the code hard to maintain, so there gotta be a balance somewhere. In the scope of this small exercise, I guess it&#8217;s OK to use it.</p>
+
+<p>Now that we have the squares of individual digits in a list, we can calculate the sum by reducing or folding it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">((</span><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}).</span><span class="n">foldLeft</span><span class="o">(</span><span class="mf">0.0</span><span class="o">)</span> <span class="o">{</span> <span class="k">_</span> <span class="o">+</span> <span class="k">_</span> <span class="o">}).</span><span class="n">toInt</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>{\_ + \_}</code> seems a lot like line noise. The underscore converts the statement into a closure. It&#8217;s a shortcut for <code>(a,b)=&gt;a+b</code>. It&#8217;s succinct yet should be used sparingly.</p>
+
+<p>Step2:return</p>
+
+<p>lol, yeah, no extra fluff is needed. We can capture the constraints in one return statement, but before that, I need to decide on what states I need to carry on from each recursive step. (You know I&#8217;m going to use recursion, don&#8217;t you? :P)</p>
+
+<p>There are a couple of states involved:
+1. the limit. It&#8217;s the number of steps we allow before the final &#8220;1&#8221; is reached. It took number seven 5 steps to reach 1. This variable is the cut-off: if the given number can&#8217;t reach 1 before the limit, it&#8217;s considered unhappy (return <code>false</code>)
+2. the current number of steps
+3. the set of numbers already appeared. In the case of seven, the set is <code>{49 97 130 10}</code>. This set is used to determine if the calculations fall into a loop. If the current calculated number appears in this set, the original number is unhappy.</p>
+
+<p>So here&#8217;s our method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">limit</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">numOfTries</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">alreadySeen</span><span class="k">:</span><span class="kt">Set</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span><span class="kt">Boolean</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class='line'><span class="k">val</span> <span class="n">sos</span> <span class="k">=</span> <span class="o">((</span><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}).</span><span class="n">foldLeft</span><span class="o">(</span><span class="mf">0.0</span><span class="o">)</span> <span class="o">{</span> <span class="k">_</span> <span class="o">+</span> <span class="k">_</span> <span class="o">}).</span><span class="n">toInt</span>
+</span><span class='line'><span class="k">return</span> <span class="n">sos</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">?</span> <span class="kc">true</span> <span class="k">:</span> <span class="o">(</span><span class="kt">!alreadySeen.contains</span><span class="o">(</span><span class="kt">sos</span><span class="o">)</span> <span class="kt">&amp;amp</span><span class="o">;</span><span class="kt">&amp;amp</span><span class="o">;</span> <span class="n">numOfTries</span><span class="o">+</span><span class="mi">1</span> <span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="k">=</span> <span class="n">limit</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">sos</span><span class="o">,</span> <span class="n">limit</span><span class="o">,</span> <span class="n">numOfTries</span><span class="o">+</span><span class="mi">1</span><span class="o">,</span> <span class="n">alreadySeen</span><span class="o">+</span><span class="n">sos</span><span class="o">))</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The second line basically says: when <code>sos</code> (sum of squares) is 1, return <code>true</code>, otherwise, is the number already in the set of numbers seen during the calculation?, if not, does the number of calculation exceed the limit? if not, repeat the calculation, with sos being the &#8220;original&#8221; number, increase the counter and put sos in the <code>alreadySeen</code> set.</p>
+
+<p>Note that this is a <a href="http://en.wikipedia.org/wiki/Tail_recursion">Tail recursion</a> function, we can add <code>@tailrec</code> annotation to the method to let the compiler optimize it - turn the recursion into a loop so that it won&#8217;t grow in stack.</p>
+
+<p>Now that we&#8217;ve had the body of the function, we can write an overload method that provides initial values:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span><span class="k">:</span><span class="kt">Boolean</span> <span class="o">=</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="nc">Set</span><span class="o">[</span><span class="kt">Int</span><span class="o">]())</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To find all happy numbers between 1 and 100:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">println</span> <span class="o">(</span><span class="mi">1</span> <span class="n">to</span> <span class="mi">100</span> <span class="n">filter</span> <span class="o">{</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="o">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/2010/06/09/launch-windows-explorer-and-goto-the-current-working-directory-in-shell/">Launch Windows Explorer and Goto the Current Working Directory in Shell</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-06-09T19:45:00-04:00" pubdate data-updated="true">Jun 9<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>I like working in the command prompt - it&#8217;s fast and you can do batch processing, etc, but sometimes, I need a GUI (Windows explorer) to explore files in the current directory. I know I can type &#8220;explorer.exe&#8221; on the command line to launch Windows explorer, but can it automatically go to the directory I&#8217;m working in? The answer is yes, although hardly ever <a href="http://support.microsoft.com/kb/314853" title="">advertised</a></p>
+
+<p>Now, we need to find a way to find out the current working directory. On the command prompt, it&#8217;s stored in the environment variable %CD%, so combine the two:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>explorer /root,%CD%</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and it works beautifully.</p>
+
+<p>Put this in a .bat file and put it on your path, you can launch Windows explorer anywhere and have it go directly to the folder you&#8217;re in on the command line!</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/blog/page/3/">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I&#8217;m a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang&#8217;s concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating&#8230;</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: vim, | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/vim-/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Spectrum.vim - My first Vim plugin]]></title>
+    <link href="http://kevinjqiu.github.com/2011/04/20/spectrum-dot-vim-my-first-vim-plugin/"/>
+    <updated>2011-04-20T20:09:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2011/04/20/spectrum-dot-vim-my-first-vim-plugin</id>
+    <content type="html"><![CDATA[<p>ver the past few months, I've been using Vim as my primary development tool at work and at home, and I have to say, I'm addicted to it! I'm thinking about writing a blog post of why I get hooked on <a href="http://walking-without-crutches.heroku.com/">walking without crutches</a>, but for this post, I'm just going to introduce you to my first plugin in Vim - <a href="https://github.com/kevinjqiu/spectrum.vim">Spectrum</a>.</p>
+
+<h2>Introduction</h2>
+
+<p>Spectrum is a vim colorscheme roulette. Ever getting tired of staring at the same colorscheme every day? Having hundreds of colorschemes in your repo but too lazy to deterministically pick one? Spectrum helps you by randomly pick colorschemes from your vim runtime path or from the <a href="http://inspiration.sweyla.com/code/">web</a>. From there, you have the chance of voting up a colorscheme so Spectrum will have a higher probability to pick it or voting down a colorscheme so you wouldn't see it again.</p>
+
+<h2>Development</h2>
+
+<p>To be honest, I'm not a fan of <a href="http://en.wikipedia.org/wiki/Vimscript">Vimscript</a> - the language is not very expressive and doesn't have a lot of object oriented features. Semi-fortunately, since Vim 7, they have added support for Python, Ruby and Perl scripts. I said 'semi-fortunately' because the support isn't too comprehensive. For most core vim features, you still have to resort to calling Vim commands to achieve them, but at least I don't have to use Vim script for the most part.</p>
+
+<p>Spectrum is written in Python, and use the <code>vim</code> module to interact with the hosting Vim instance. There is a bit of bootstrapping to do if you want to separate most of the Python code out of the entry point vim script (see <a href="https://github.com/kevinjqiu/spectrum.vim/blob/master/plugin/spectrum.vim">here</a>). Many vim plugins written in Python require you to install the python code into your Python runtime before you can use them, but for a simple module like Spectrum, I opted for monkey patching syspath to include modules in the plugin folder.</p>
+
+<p>Anyhow, give it a try and hope you like it.</p>
+
+<p><a href="https://github.com/kevinjqiu/spectrum.vim">https://github.com/kevinjqiu/spectrum.vim</a></p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: python, | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/python-/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Use Python decorator to curry functions]]></title>
+    <link href="http://kevinjqiu.github.com/2010/10/22/use-python-decorator-to-curry-functions/"/>
+    <updated>2010-10-22T20:06:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/10/22/use-python-decorator-to-curry-functions</id>
+    <content type="html"><![CDATA[<p>It's been a while since the last time I wrote about Python. This morning, I was listening to a podcast on my way to work. They were discussing functional programming and dynamic languages...I learned Python before I went into Computer Science, and then I learned about functional programming and through learning of Scala and Clojure, my functional programming concepts have been enriched. As I was listening, it suddenly appeared to me that there isn't a way in Python to <a href="http://en.wikipedia.org/wiki/Currying">curry</a> a function. Not that it's critical to everyday development, but wouldn't it be neat if I can curry a function in Python?</p>
+
+<p>Then the hosts of the podcast discussed how dynamic languages are so flexible that you can pretty much do anything to it. "You can take a function as parameter, return a function from a function, and so on." Hey, isn't that what Python's <a href="http://www.artima.com/weblogs/viewpost.jsp?thread=240808">decorator</a> can do? I learned decorators before, but I haven't used it beyond the scope of creating properties and certainly haven't written any decorators. I thought this would be a good exercise for learning decorators.</p>
+
+<p>Here's a simple example of what function currying: suppose you have a method</p>
+
+<p><code>python
+def add(x,y):
+  return x+y
+</code></p>
+
+<p>Then calling <code>add(1,2)</code> should be the same as <code>add(1)(2)</code>. <code>add(1)</code> is what they call a partially applied function. It's a function that takes one parameter.</p>
+
+<p>Our goal here is to write a decorator "curried" that takes a function with n parameters and transform it in a way that can be applied n times and get the final result.</p>
+
+<p>We'll start with unit tests first:</p>
+
+<p>```python
+import unittest</p>
+
+<p>class CurryTest(unittest.TestCase):</p>
+
+<pre><code>def test_with_no_args(self):
+    @curried
+    def do_nothing():
+        return ""
+    self.assertEquals("", do_nothing())
+
+def test_with_int_args(self):
+    @curried
+    def add_int(x,y):
+        return x+y
+    self.assertEquals(3, add_int(1)(2))
+def test_with_str_args(self):
+    @curried
+    def add_str(x,y):
+        return "%s%s"%(x,y)
+    self.assertEquals("ab", add_str("a")("b"))
+</code></pre>
+
+<p>```</p>
+
+<p>So we make sure that a currying on a function takes no parameter is valid but should be a pass through, and also the "curried" decorator can be applied to any function with arguments (excluding positional arguments and keyword arguments)</p>
+
+<p>A decorator is simply a function that takes a function as parameter:
+<code>python
+def curried(fn):
+  pass
+</code>
+and <code>@curried</code> is simply a syntactic sugar for:</p>
+
+<p><code>python
+def fn(...): ...
+fn=curried(fn)
+</code></p>
+
+<p>So, now we can write <code>curried</code> decorator.
+To make the test for function with no argument pass, in <code>curried()</code> function, we can test to see if fn has arguments. Python's standard library provides <code>inspect.getargspec</code> method:</p>
+
+<p>```python
+def curried(fn):
+  argspec = inspect.getargspec(fn)
+  if len(argspec.args)==0:</p>
+
+<pre><code>return fn
+</code></pre>
+
+<p>  else:</p>
+
+<pre><code># later
+</code></pre>
+
+<p>```</p>
+
+<p>Now the first test passes.</p>
+
+<p>For the other two cases, here's the strategy. In Python, when a class defines <code>__call__</code> method, the instance of that class is said to be "callable". For instance:</p>
+
+<p>```python
+class A(object):
+  def <strong>call</strong>(self, arg):</p>
+
+<pre><code>return arg
+</code></pre>
+
+<p>f=A()
+f("echo")  # this gives you "echo"
+```</p>
+
+<p>This is very similar to Scala's <code>apply()</code> function. Now that we have this in our inventory, we can define a <code>PartialFunction</code> class, take all the required parameters of the original function, and allow them to be applied one at a time. So the <code>__call__</code> method of PartialFunc will look like this:</p>
+
+<p><code>python
+def __call__(self, value):
+  # Xxx
+</code></p>
+
+<p>If all the required parameters are passed in, <code>PartialFunc</code> should evaluate the original function with the complete argument list. Otherwise, <code>PartialFunc</code> stores the parameter in an instance variable, and returns itself.</p>
+
+<p>Here's the complete code:
+```python
+class PartialFunc(object):</p>
+
+<pre><code>def __init__(self, fn, argspec):
+    self.fn = fn
+    self.argspec = argspec 
+    self.args = []
+
+def __call__(self, value):
+    self.args.append(value) 
+    if len(self.args) == len(self.argspec.args):
+        arglist = ",".join(["self.args[%d]"%i for i in range(0, len(self.args))])
+        return eval("self.fn(" + arglist + ")")
+    else:
+        return self
+</code></pre>
+
+<p>```</p>
+
+<p>and the curried decorator:
+```python
+def curried(fn):</p>
+
+<pre><code>argspec = inspect.getargspec(fn)
+if len(argspec.args) == 0:
+    return fn
+else:
+    return PartialFunc(fn, argspec)
+</code></pre>
+
+<p>```</p>
+
+<p>It's pretty straightforward. When the parameters are complete, I construct a python statement that calls the original function with the complete argument list, and then pass the statement into an eval statement. I know evals are evil, but I can't find a way in Python to dynamically change the signature of the original method and make it accept a variable length argument (varargs).</p>
+
+<p>So this is it. It's quite simple. Python methods can have varargs and keyword args, the situation gets a little more complicated. The thing is, both varargs and keyword args are not mandatory, so it's hard for the curried function to know whether the argument list has been completed...Also, if you take default values into account, it could get even more complicated.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Enable Auto-complete in a PDB session]]></title>
+    <link href="http://kevinjqiu.github.com/2009/06/12/enable-auto-complete-in-a-pdb-session/"/>
+    <updated>2009-06-12T09:25:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2009/06/12/enable-auto-complete-in-a-pdb-session</id>
+    <content type="html"><![CDATA[<p>EDIT: 2012-06-19 There are so many other much better options now that renders recipe obsolete. See <a href="https://bitbucket.org/antocuni/pdb/src">pdb++</a> or <a href="https://github.com/gotcha/ipdb">ipdb</a></p>
+
+<p>Pretty simple actually…Just put the following code in <code>~/.pdbrc</code> and then you can use the Tab key during a PDB session to see the available attributes of the current context.</p>
+
+<p><code>python
+import rlcompleter
+pdb.Pdb.complete=rlcompleter.Completer(locals()).complete
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

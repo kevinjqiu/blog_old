@@ -1,0 +1,964 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Building a GAE+GWT application using the best practices (Part 5) - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="Building a GAE+GWT application using the best practices series Part 1
+Part 2
+Part 3
+Part 4
+Part 5 In the last post of the series, I&#8217;ve shown &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Building a GAE+GWT Application Using the Best Practices (Part 5)</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-09T13:24:00-05:00" pubdate data-updated="true">Mar 9<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Building a GAE+GWT application using the best practices series</h2>
+
+<ol>
+<li><a href="/2010/02/26/building-a-gae-plus-gwt-application-using-the-best-practices-part-1/">Part 1</a></li>
+<li><a href="/2010/03/01/building-a-gae-plus-gwt-application-using-the-best-practices-part-2/">Part 2</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-3/">Part 3</a></li>
+<li><a href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/">Part 4</a></li>
+<li>Part 5</li>
+</ol>
+
+
+<p>In the last post of the series, I&#8217;ve shown how to setup a client side GIN+MVP project. This post will discuss the actual building of the UI and GWT-RPC web service calls using GWT-Dispatch on the client side.</p>
+
+<h2>Use cases</h2>
+
+<p>Before we dive into the code, let&#8217;s go over again the use cases our little app has.
+<a href="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png"><img src="http://reminiscential.files.wordpress.com/2010/02/screenshot2.png" alt="" title="RateChecker" width="259" height="216" class="aligncenter size-full wp-image-145" /></a></p>
+
+<ul>
+<li>When the UI loads, it should automatically fetch the latest saved rate</li>
+<li>Also, the table below the latest rate should display the 10 most recent rates stored in the data store</li>
+<li>The &#8220;Refresh&#8221; button does the above two steps</li>
+<li>The &#8220;Fetch latest&#8221; button fetches the rate from the bank website, store it in the data store, and insert the latest rate in the recent rate table</li>
+</ul>
+
+
+<h2>MVP pattern</h2>
+
+<p>For traditional desktop application, there&#8217;s the MVC (Model-View-Control) pattern that&#8217;s been in existence for over 20 years, since the Smalltalk days. However, the responsibility separation between the view and controller hasn&#8217;t been well defined and over the years, people have been arguing about what whether the business logic should be entirely in controller.</p>
+
+<p>With the MVP (Model-View-Presenter) pattern, the view itself doesn&#8217;t contain any logic. The presenter manipulates the view according to business logic. Therefore, the pattern is also called &#8220;supervising controller&#8221; or &#8220;passive view&#8221;. This brings a huge benefit because now unit tests only have to deal with presenters, and mock out the view through the display interface. With this setup, the presenter unit tests can be run entirely in JVM. Otherwise, the tests need to involve GWT widgets, which can only be tested with GWTTestCase, which takes a lot longer to run.</p>
+
+<h2>MainView</h2>
+
+<p>Here I&#8217;m using the new GWT2 UiBinder feature. UiBinder makes developing UI less boring.</p>
+
+<figure class='code'><figcaption><span>MainView.ui.xml</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='xml'><span class='line'><span class="cp">&lt;!DOCTYPE ui:UiBinder SYSTEM &quot;http://dl.google.com/gwt/DTD/xhtml.ent&quot;&gt;</span>
+</span><span class='line'><span class="nt">&lt;ui:UiBinder</span> <span class="na">xmlns:ui=</span><span class="s">&quot;urn:ui:com.google.gwt.uibinder&quot;</span>
+</span><span class='line'>    <span class="na">xmlns:g=</span><span class="s">&quot;urn:import:com.google.gwt.user.client.ui&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;ui:style&gt;</span>
+</span><span class='line'>        .rateDisplay {
+</span><span class='line'>            font-size: x-large;
+</span><span class='line'>            font-weight: bolder;
+</span><span class='line'>        }
+</span><span class='line'>
+</span><span class='line'>        .mainPanel {
+</span><span class='line'>            padding: 10px;
+</span><span class='line'>        }
+</span><span class='line'>    <span class="nt">&lt;/ui:style&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nt">&lt;ui:with</span> <span class="na">type=</span><span class="s">&quot;ratechecker.client.bundles.RateCheckerClientBundle&quot;</span>
+</span><span class='line'>        <span class="na">field=</span><span class="s">&quot;bundle&quot;</span><span class="nt">&gt;&lt;/ui:with&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;g:DecoratorPanel</span> <span class="na">height=</span><span class="s">&quot;200px&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;g:VerticalPanel</span> <span class="na">styleName=</span><span class="s">&quot;{style.mainPanel}&quot;</span> <span class="na">verticalAlignment=</span><span class="s">&quot;ALIGN_TOP&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;g:Label&gt;</span>Latest Selling Rate<span class="nt">&lt;/g:Label&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;g:Image</span> <span class="na">resource=</span><span class="s">&quot;{bundle.loading}&quot;</span> <span class="na">visible=</span><span class="s">&quot;false&quot;</span>
+</span><span class='line'>                <span class="na">ui:field=</span><span class="s">&quot;loading&quot;</span><span class="nt">&gt;&lt;/g:Image&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;g:Label</span> <span class="na">ui:field=</span><span class="s">&quot;rateDisplay&quot;</span> <span class="na">styleName=</span><span class="s">&quot;{style.rateDisplay}&quot;</span><span class="nt">&gt;&lt;/g:Label&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;g:HorizontalPanel&gt;</span>
+</span><span class='line'>                <span class="nt">&lt;g:Button</span> <span class="na">ui:field=</span><span class="s">&quot;fetchLatest&quot;</span><span class="nt">&gt;</span>Fetch Latest<span class="nt">&lt;/g:Button&gt;</span>
+</span><span class='line'>                <span class="nt">&lt;g:Button</span> <span class="na">ui:field=</span><span class="s">&quot;refresh&quot;</span><span class="nt">&gt;</span>Refresh<span class="nt">&lt;/g:Button&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;/g:HorizontalPanel&gt;</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nt">&lt;g:Label&gt;</span>Recent rates<span class="nt">&lt;/g:Label&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;g:FlexTable</span> <span class="na">ui:field=</span><span class="s">&quot;rateTable&quot;</span><span class="nt">&gt;</span>
+</span><span class='line'>            <span class="nt">&lt;/g:FlexTable&gt;</span>
+</span><span class='line'>        <span class="nt">&lt;/g:VerticalPanel&gt;</span>
+</span><span class='line'>    <span class="nt">&lt;/g:DecoratorPanel&gt;</span>
+</span><span class='line'><span class="nt">&lt;/ui:UiBinder&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>UiBinder can inter-operate with GWT2 ClientBundle. If you have used GWT1.x&#8217;s ImageBundle, ClientBundle is similar to that, except now with ClientBundle, other client resources are able to be bundled such as CSS stylesheet and external text resource.</p>
+
+<h3>MainPresenter.Display</h3>
+
+<p>The display interface is the only thing presenter knows about the UI, and the presenter operates/manipulates UI only through the display interface.</p>
+
+<p>The display interface can be standalone, but I find it&#8217;s much more convenient to have it as an inner interface inside the presenter class.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Display</span> <span class="kd">extends</span> <span class="n">WidgetDisplay</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">HasText</span> <span class="nf">getRateDisplayLabel</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">HasClickHandlers</span> <span class="nf">getFetchLatest</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">HasClickHandlers</span> <span class="nf">getRefresh</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">setEnabledFetchLatestButton</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">isEnabled</span><span class="o">);</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">isLoading</span><span class="o">);</span>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Add the rate to the recent rate table.</span>
+</span><span class='line'><span class="cm">     * @param rate</span>
+</span><span class='line'><span class="cm">     *      The {@link Rate} object</span>
+</span><span class='line'><span class="cm">     * @param toHead</span>
+</span><span class='line'><span class="cm">     *      &lt;code&gt;true&lt;/code&gt; - rate is inserted to the beginning of the table</span>
+</span><span class='line'><span class="cm">     *      &lt;code&gt;false&lt;/code&gt; - rate is appended to the end of the table</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">addToRecentRates</span><span class="o">(</span><span class="n">Rate</span> <span class="n">rate</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">toHead</span><span class="o">);</span>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Clear the recent rates table.</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">clearRecentRates</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here we use the &#8220;characteristic interface&#8221; of the UI elements as return type as they can be mocked. For things that cannot be returned as characteristic interfaces (like FlexTable), we provide methods for the presenter to manipulate the state of the UI objects (such as clearRecentRates()).</p>
+
+<h3>MainView.java</h3>
+
+<p>Now we have the display interface, we can map these interface methods onto our UI.</p>
+
+<figure class='code'><figcaption><span>MainView.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">ratechecker</span><span class="o">.</span><span class="na">client</span><span class="o">.</span><span class="na">mvp</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainView</span> <span class="kd">extends</span> <span class="n">Composite</span> <span class="kd">implements</span> <span class="n">MainPresenter</span><span class="o">.</span><span class="na">Display</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="n">MainViewUiBinder</span> <span class="n">uiBinder</span> <span class="o">=</span> <span class="n">GWT</span>
+</span><span class='line'>    <span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">MainViewUiBinder</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">interface</span> <span class="nc">MainViewUiBinder</span> <span class="kd">extends</span> <span class="n">UiBinder</span><span class="o">&lt;</span><span class="n">Widget</span><span class="o">,</span> <span class="n">MainView</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@UiField</span>
+</span><span class='line'>    <span class="n">Button</span> <span class="n">refresh</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@UiField</span>
+</span><span class='line'>    <span class="n">Button</span> <span class="n">fetchLatest</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@UiField</span>
+</span><span class='line'>    <span class="n">Label</span> <span class="n">rateDisplay</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@UiField</span>
+</span><span class='line'>    <span class="n">FlexTable</span> <span class="n">rateTable</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@UiField</span>
+</span><span class='line'>    <span class="n">Image</span> <span class="n">loading</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">DateTimeFormat</span> <span class="n">_dateTimeFormat</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Inject</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">MainView</span><span class="o">(</span><span class="kd">final</span> <span class="n">DateTimeFormat</span> <span class="n">dateTimeFormat</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">_dateTimeFormat</span> <span class="o">=</span> <span class="n">dateTimeFormat</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">initWidget</span><span class="o">(</span><span class="n">uiBinder</span><span class="o">.</span><span class="na">createAndBindUi</span><span class="o">(</span><span class="k">this</span><span class="o">));</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">HasClickHandlers</span> <span class="nf">getFetchLatest</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">fetchLatest</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Widget</span> <span class="nf">asWidget</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">this</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">HasText</span> <span class="nf">getRateDisplayLabel</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">rateDisplay</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setEnabledFetchLatestButton</span><span class="o">(</span><span class="kd">final</span> <span class="kt">boolean</span> <span class="n">isEnabled</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">fetchLatest</span><span class="o">.</span><span class="na">setEnabled</span><span class="o">(</span><span class="n">isEnabled</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addToRecentRates</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">toHead</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">final</span> <span class="kt">int</span> <span class="n">newRowIdx</span> <span class="o">=</span> <span class="n">toHead</span> <span class="o">?</span> <span class="mi">0</span> <span class="o">:</span> <span class="n">rateTable</span><span class="o">.</span><span class="na">getRowCount</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">rateTable</span><span class="o">.</span><span class="na">insertRow</span><span class="o">(</span><span class="n">newRowIdx</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">rateTable</span><span class="o">.</span><span class="na">setText</span><span class="o">(</span><span class="n">newRowIdx</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">_dateTimeFormat</span><span class="o">.</span><span class="na">format</span><span class="o">(</span><span class="n">rate</span><span class="o">.</span><span class="na">getTimeFetched</span><span class="o">()));</span>
+</span><span class='line'>        <span class="n">rateTable</span><span class="o">.</span><span class="na">setText</span><span class="o">(</span><span class="n">newRowIdx</span><span class="o">,</span> <span class="mi">1</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">rate</span><span class="o">.</span><span class="na">getRate</span><span class="o">()));</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">clearRecentRates</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">rateTable</span><span class="o">.</span><span class="na">removeAllRows</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">HasClickHandlers</span> <span class="nf">getRefresh</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">refresh</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kd">final</span> <span class="kt">boolean</span> <span class="n">isLoading</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">loading</span><span class="o">.</span><span class="na">setVisible</span><span class="o">(</span><span class="n">isLoading</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">rateDisplay</span><span class="o">.</span><span class="na">setVisible</span><span class="o">(!</span><span class="n">isLoading</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="n">startProcessing</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="n">stopProcessing</span><span class="o">()</span> <span class="o">{</span> <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A lot of this is boilerplate code to satisfy both UiBinder and GWT-presenter.Display interface. Ideally, the VIew shouldn&#8217;t do too much, if any at all. Realistically, this is harder to achieve.</p>
+
+<h3>MainPresenter</h3>
+
+<p>Finally, we can show you the presenter code.</p>
+
+<figure class='code'><figcaption><span>MainPresenter.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MainPresenter</span> <span class="kd">extends</span> <span class="n">WidgetPresenter</span><span class="o">&lt;</span><span class="n">MainPresenter</span><span class="o">.</span><span class="na">Display</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">DispatchAsync</span> <span class="n">_dispatch</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">ILog</span> <span class="n">_logger</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Inject</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">MainPresenter</span><span class="o">(</span><span class="kd">final</span> <span class="n">Display</span> <span class="n">display</span><span class="o">,</span> <span class="kd">final</span> <span class="n">EventBus</span> <span class="n">eventBus</span><span class="o">,</span> <span class="kd">final</span> <span class="n">DispatchAsync</span> <span class="n">dispatch</span><span class="o">,</span> <span class="kd">final</span> <span class="n">ILog</span> <span class="n">logger</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">super</span><span class="o">(</span><span class="n">display</span><span class="o">,</span> <span class="n">eventBus</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">_dispatch</span> <span class="o">=</span> <span class="n">dispatch</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onBind</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">registerHandler</span><span class="o">(</span><span class="n">display</span><span class="o">.</span><span class="na">getFetchLatest</span><span class="o">().</span><span class="na">addClickHandler</span><span class="o">(</span><span class="k">new</span> <span class="n">ClickHandler</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="kd">final</span> <span class="n">ClickEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">fetchSellingRate</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">registerHandler</span><span class="o">(</span><span class="n">eventBus</span><span class="o">.</span><span class="na">addHandler</span><span class="o">(</span><span class="n">RateFetchedEvent</span><span class="o">.</span><span class="na">TYPE</span><span class="o">,</span> <span class="k">new</span> <span class="n">RateFetchedHandler</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRateFetched</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">saveRate</span><span class="o">(</span><span class="n">rate</span><span class="o">);</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">registerHandler</span><span class="o">(</span><span class="n">eventBus</span><span class="o">.</span><span class="na">addHandler</span><span class="o">(</span><span class="n">RateSavedEvent</span><span class="o">.</span><span class="na">TYPE</span><span class="o">,</span> <span class="k">new</span> <span class="n">RateSavedHandler</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRateSaved</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">addToRecentRates</span><span class="o">(</span><span class="n">rate</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">registerHandler</span><span class="o">(</span><span class="n">display</span><span class="o">.</span><span class="na">getRefresh</span><span class="o">().</span><span class="na">addClickHandler</span><span class="o">(</span><span class="k">new</span> <span class="n">ClickHandler</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onClick</span><span class="o">(</span><span class="kd">final</span> <span class="n">ClickEvent</span> <span class="n">event</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">getLatestSavedRates</span><span class="o">();</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">}));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">getLatestSavedRates</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">getLatestSavedRates</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">GetRates</span> <span class="n">getRates</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GetRates</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">_dispatch</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">getRates</span><span class="o">,</span> <span class="k">new</span> <span class="n">AsyncCallback</span><span class="o">&lt;</span><span class="n">GetRatesResult</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="kd">final</span> <span class="n">Throwable</span> <span class="n">caught</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">_logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">&quot;Unable to get saved rates: &quot;</span> <span class="o">+</span> <span class="n">caught</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">GetRatesResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">clearRecentRates</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="k">for</span> <span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span> <span class="o">:</span> <span class="n">result</span><span class="o">.</span><span class="na">getRates</span><span class="o">())</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="n">display</span><span class="o">.</span><span class="na">addToRecentRates</span><span class="o">(</span><span class="n">rate</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>                <span class="c1">// Put the latest rate in the box</span>
+</span><span class='line'>                <span class="k">if</span> <span class="o">(</span><span class="n">result</span><span class="o">.</span><span class="na">getRates</span><span class="o">().</span><span class="na">size</span><span class="o">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                    <span class="kd">final</span> <span class="n">Rate</span> <span class="n">latestRate</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="na">getRates</span><span class="o">().</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>                    <span class="n">display</span><span class="o">.</span><span class="na">getRateDisplayLabel</span><span class="o">().</span><span class="na">setText</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">latestRate</span><span class="o">.</span><span class="na">getRate</span><span class="o">()));</span>
+</span><span class='line'>                <span class="o">}</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">fetchSellingRate</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">CheckRate</span> <span class="n">checkRate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CheckRate</span><span class="o">(</span><span class="n">RateType</span><span class="o">.</span><span class="na">Selling</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">_dispatch</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">checkRate</span><span class="o">,</span> <span class="k">new</span> <span class="n">AsyncCallback</span><span class="o">&lt;</span><span class="n">CheckRateResult</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="kd">final</span> <span class="n">Throwable</span> <span class="n">caught</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">_logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">&quot;Unable to fetch rate: &quot;</span> <span class="o">+</span> <span class="n">caught</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">CheckRateResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">setShowLoadingCurrentRate</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>                <span class="c1">// enable the fetch button</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">setEnabledFetchLatestButton</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>                <span class="n">display</span><span class="o">.</span><span class="na">getRateDisplayLabel</span><span class="o">().</span><span class="na">setText</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">result</span><span class="o">.</span><span class="na">getRate</span><span class="o">().</span><span class="na">getRate</span><span class="o">()));</span>
+</span><span class='line'>                <span class="n">eventBus</span><span class="o">.</span><span class="na">fireEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">RateFetchedEvent</span><span class="o">(</span><span class="n">result</span><span class="o">.</span><span class="na">getRate</span><span class="o">()));</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">});</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// disable the fetch button until RPC succeeds</span>
+</span><span class='line'>        <span class="n">display</span><span class="o">.</span><span class="na">setEnabledFetchLatestButton</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">void</span> <span class="nf">saveRate</span><span class="o">(</span><span class="kd">final</span> <span class="n">Rate</span> <span class="n">rate</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">final</span> <span class="n">SaveRate</span> <span class="n">saveRate</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SaveRate</span><span class="o">(</span><span class="n">rate</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">_dispatch</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">saveRate</span><span class="o">,</span> <span class="k">new</span> <span class="n">AsyncCallback</span><span class="o">&lt;</span><span class="n">SaveRateResult</span><span class="o">&gt;()</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="kd">final</span> <span class="n">Throwable</span> <span class="n">caught</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">_logger</span><span class="o">.</span><span class="na">error</span><span class="o">(</span><span class="s">&quot;Unable to save rate: &quot;</span> <span class="o">+</span> <span class="n">caught</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="nd">@Override</span>
+</span><span class='line'>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">SaveRateResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">eventBus</span><span class="o">.</span><span class="na">fireEvent</span><span class="o">(</span><span class="k">new</span> <span class="n">RateSavedEvent</span><span class="o">(</span><span class="n">rate</span><span class="o">));</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="o">});</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">protected</span> <span class="kt">void</span> <span class="n">onPlaceRequest</span><span class="o">(</span><span class="kd">final</span> <span class="n">PlaceRequest</span> <span class="n">request</span><span class="o">)</span> <span class="o">{</span> <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">protected</span> <span class="kt">void</span> <span class="n">onUnbind</span><span class="o">()</span> <span class="o">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="n">refreshDisplay</span><span class="o">()</span> <span class="o">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="n">revealDisplay</span><span class="o">()</span> <span class="o">{}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="n">Place</span> <span class="n">getPlace</span><span class="o">()</span> <span class="o">{</span> <span class="k">return</span> <span class="kc">null</span><span class="o">;</span> <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In the binding process, the event handlers are attached to the view components. <code>MainPresenter.bind()</code> was explicitly called by <code>AppPresenter.go()</code>. This is a simple application with one presenter. If there are more presenters, <code>AppPresenter</code> needs to manage the state of these sub-presenters: if they&#8217;re active, the <code>bind()</code> method is called. If the presenter is no-longer active, the presenter&#8217;s <code>unbind()</code> method should be called to un-attach the handlers, so they don&#8217;t interfere with the event handlers that are currently in the active presenter.</p>
+
+<p>The presenter is also responsible for making web service calls and deal with the returns. To call GWT-RPC web service using GWT-dispatch, we inject a DispatchAsync, which is an asynchronous counter part of the DispatchServlet introduced a few posts ago.</p>
+
+<p>To call a web service, we simply construct an action object with required parameters and pass it in <code>DispatchAsync.execute()</code> and expect an <code>AsyncCallback</code> of type result that&#8217;s coupled with the action. (remember each action has a coupled result type). Also, in this application, every action has a related event to indicate whether the action is successful. The event is thrown onto the event bus, so any interested party can handle that. The main benefit of using event bus is that my web service calls don&#8217;t have to be coupled with the subsequent actions. For example, saveRate() method is responsible for making the web service calls, but the subsequent action (adding the saved rate to the recent rate table) isn&#8217;t part of saveRate() method, and it shouldn&#8217;t be. If in the future, some other actions need to be carried out when a rate is saved, we just have to add the action in the RateSavedHandler, and indeed, if another part of the UI (not visible by main presenter) need to do something after the rate is saved, that presenter only needs to handle that event in there without affecting saveRate() method at all.</p>
+
+<p>For view the full source code, take a look at the project I created on <a href="http://github.com/kevinjqiu/ratechecker">Github</a>.</p>
+
+<p><strong>EDIT:</strong> For any Google App Engine experts out there happened to be reading this post, I&#8217;m having trouble with the performance of this simple app. Seems like the data store is taking way too much time executing my query. Initially I thought it was because URL fetch is slow, but I recently added a property in Rate entity to track the time spent on fetching the URL and every request takes less than 1 second. However, the GetRates action takes a long time to return (usually ~3 to 5 seconds, sometimes even over 10 seconds). It&#8217;s a simple query ordering on a single property so no complex index is needed. So I&#8217;m wondering what&#8217;s wrong here.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-03-09T13:24:00-05:00" pubdate data-updated="true">Mar 9<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gae/'>gae</a>, <a class='category' href='/blog/categories/gwt-/'>gwt,</a>, <a class='category' href='/blog/categories/java-/'>java,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/03/03/building-a-gae-plus-gwt-application-using-the-best-practices-part-4/" title="Previous Post: Building a GAE+GWT application using the best practices (Part 4)">&laquo; Building a GAE+GWT application using the best practices (Part 4)</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/03/26/gwt-code-split-is-awesome/" title="Next Post: GWT code split is awesome">GWT code split is awesome &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/03/09/building-a-gae-plus-gwt-application-using-the-best-practices-part-5/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

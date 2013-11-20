@@ -1,0 +1,12 @@
+<div class="highlight"><pre><span class="p">(</span><span class="kd">defn- </span><span class="nv">transposed-2-letter</span>
+  <span class="s">&quot;Produce a mapping between the transposed codes to letter&quot;</span>
+  <span class="p">[</span><span class="nv">square</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">letfn</span> <span class="p">[(</span><span class="nf">helper</span> <span class="p">[</span><span class="nv">the-square</span> <span class="nv">the-map</span><span class="p">]</span>
+            <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">empty?</span> <span class="nv">the-square</span><span class="p">)</span>
+              <span class="nv">the-map</span>
+              <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">the-item</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-square</span><span class="p">)</span>
+                    <span class="nv">the-key</span> <span class="p">(</span><span class="nb">second </span><span class="nv">the-item</span><span class="p">)</span>
+                    <span class="nv">the-letter</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-item</span><span class="p">)]</span>
+                <span class="p">(</span><span class="nf">recur</span> <span class="p">(</span><span class="nb">rest </span><span class="nv">the-square</span><span class="p">)</span> <span class="p">(</span><span class="nb">assoc </span><span class="nv">the-map</span> <span class="nv">the-key</span> <span class="nv">the-letter</span><span class="p">)))))]</span>
+    <span class="p">(</span><span class="nf">helper</span> <span class="nv">square</span> <span class="p">(</span><span class="nf">empty</span> <span class="nv">hash-map</span><span class="p">))))</span>
+</pre></div>

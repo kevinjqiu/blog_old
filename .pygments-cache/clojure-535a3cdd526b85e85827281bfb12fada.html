@@ -1,0 +1,13 @@
+<div class="highlight"><pre><span class="p">(</span><span class="k">def </span><span class="nv">RESET</span> <span class="s">&quot;&amp;#092;&amp;#048;33[0m&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="kd">defmacro </span><span class="nv">defcolour</span> <span class="p">[</span><span class="nv">colour-func-name</span> <span class="nv">bg-colour-func-name</span> <span class="nv">colour-code</span><span class="p">]</span>
+  <span class="o">`</span><span class="p">(</span><span class="nf">do</span>
+    <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="p">(</span><span class="nf">colour</span> <span class="o">~</span><span class="nv">colour-code</span><span class="p">)</span> <span class="nv">text#</span> <span class="nv">RESET</span><span class="p">))</span>
+    <span class="p">(</span><span class="kd">defn </span><span class="o">~</span><span class="nv">bg-colour-func-name</span> <span class="p">[</span><span class="nv">text#</span><span class="p">]</span>
+      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="p">(</span><span class="nf">colour</span> <span class="o">~</span><span class="nv">bg-colour-code</span> <span class="nv">true</span><span class="p">)</span> <span class="nv">text#</span> <span class="nv">RESET</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defcolour</span> <span class="nv">black</span> <span class="nv">bg-black</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">defcolour</span> <span class="nv">red</span> <span class="nv">bg-red</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">defcolour</span> <span class="nv">green</span> <span class="nv">bg-green</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1">; etc...</span>
+</pre></div>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: misc | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/misc/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Google IO 2010 is here]]></title>
+    <link href="http://kevinjqiu.github.com/2010/05/19/google-io-2010-is-here/"/>
+    <updated>2010-05-19T19:42:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/05/19/google-io-2010-is-here</id>
+    <content type="html"><![CDATA[<p>This year's <a href="http://code.google.com/events/io/2010/" title="">Google IO conference</a> is finally here! I don't want to sound like a fanboy but I benefited a lot from last year's IO sessions and looking at this year's <a href="http://code.google.com/events/io/2010/sessions.html">session list</a>, I'm sure I won't be disappointed.</p>
+
+<p>This year's keynote speech is an overview of Google's strategy to bring web to the next level. It seems HTML5 is rapidly gaining grounds. Although the specification is not finalized yet, many of the new features are already implemented in most modern browsers, such as AppCache, WebSQL, LocalStorage, Web Worker, and WebSocket. GWT is still in a very strategic place in Google's plan, and this year, they partnered with Spring to make it dead easy to setup a GWT-Spring application from ground up. I tried it myself shortly after I saw the keynote and it brought a lot of the agile element into Java development - scaffolding, ORM, test driven, fast reloading time in development and project lifecycle management with Maven. It all looked very good. I certainly will look more into this development setup.</p>
+]]></content>
+  </entry>
+  
+</feed>

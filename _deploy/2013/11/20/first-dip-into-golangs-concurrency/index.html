@@ -1,0 +1,673 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>First dip into Golang's concurrency - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="I have been toying with Google&#8217;s Go language lately. The native support for concurrent programming is one of Go&#8217;s major selling point. Go &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">First Dip Into Golang's Concurrency</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-20T11:53:00-05:00" pubdate data-updated="true">Nov 20<span>th</span>, 2013</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I have been toying with Google&#8217;s <a href="http://golang.org">Go</a> language lately.  The native support for concurrent programming is one of Go&#8217;s major selling point.</p>
+
+<p>Go has low-level primitives for concurrent programming such as <a href="http://golang.org/pkg/sync/#Mutex">mutexes</a> and <a href="http://golang.org/pkg/sync/atomic/">atomic</a>, but also provides high-level language constructs for building concurrent programs via goroutines and channels.</p>
+
+<p>Goroutines are functions executing in the same address space as other goroutines, like threads, but unlike threads, they communicate to each other via channels, not shared variables.</p>
+
+<p>Channels provide a lock-free mechanism for goroutines to communicate.  To me, conceptually it feels a lot like a Unix socket: you can wait on it for data, or you can send data to it.  In Go, channels are also strongly and statically typed.</p>
+
+<p>For me, the best way to learn something is to put it to practice.  I use one problem from <a href="http://projecteuler.net">Project Euler</a>.</p>
+
+<pre><code>Find the sum of all prime numbers under 2 million
+</code></pre>
+
+<p>I wrote an Erlang version of this problem <a href="/blog/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/">before</a>, but since then, Erlang kind of fell off my radar.  However, the problem and the concurrent solution is still relevant.</p>
+
+<h1>Test if a number is prime</h1>
+
+<p>I&#8217;ll briefly go over primality test function, since it&#8217;s not the focus of this blog post:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">isPrime</span><span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">||</span> <span class="nx">n</span> <span class="o">==</span> <span class="mi">2</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">true</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Mod</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">n</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">false</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mf">3.0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Floor</span><span class="p">(</span><span class="nx">math</span><span class="p">.</span><span class="nx">Sqrt</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">n</span><span class="p">)));</span> <span class="nx">i</span> <span class="o">+=</span> <span class="mf">2.0</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="nx">math</span><span class="p">.</span><span class="nx">Mod</span><span class="p">(</span><span class="nb">float64</span><span class="p">(</span><span class="nx">n</span><span class="p">),</span> <span class="nx">i</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">false</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">true</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I understand there are other faster primality tests but I opted for this basic algorithm for simplicity.</p>
+
+<h1>Non-concurrent version</h1>
+
+<p>A naive way to solve this problem is to call <code>isPrime</code> on every number below 2 million, if it&#8217;s a prime, add it to the tally.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">sumPrimesUpto</span><span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">sum</span> <span class="o">:=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="nx">isPrime</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="nx">sum</span> <span class="o">+=</span> <span class="nx">i</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">sum</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here&#8217;s the main function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">upperBound</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">strconv</span><span class="p">.</span><span class="nx">Atoi</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">Args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="s">&quot;Invalid argument.&quot;</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">os</span><span class="p">.</span><span class="nx">Exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nx">result</span> <span class="o">:=</span> <span class="nx">sumPrimesUpto</span><span class="p">(</span><span class="nx">upperBound</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now run it and time it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="err">$</span> <span class="nx">time</span> <span class="k">go</span> <span class="nx">run</span> <span class="nx">sumprimes1</span><span class="p">.</span><span class="k">go</span> <span class="mi">2000000</span>
+</span><span class='line'><span class="mi">142913828923</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">real</span>    <span class="mi">0</span><span class="nx">m27</span><span class="mf">.032</span><span class="nx">s</span>
+</span><span class='line'><span class="nx">user</span>    <span class="mi">0</span><span class="nx">m26</span><span class="mf">.953</span><span class="nx">s</span>
+</span><span class='line'><span class="nx">sys</span>     <span class="mi">0</span><span class="nx">m0</span><span class="mf">.029</span><span class="nx">s</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Not too bad.  I remember when I ran this algorithm 4 years ago on my previous laptop (Core-2 Duo) I wasn&#8217;t able to produce any result in a tolerable timeframe.  My current machine is a 3-year old Quad Core i7.</p>
+
+<h1>Concurrent version</h1>
+
+<p>If you are on Linux and you open system monitor while the previous program was running, you can see that only one CPU was saturated and constantly running at near 100%, but all other cores are nearly idle.  Of course this is a huge waste of our computing resource.  <code>isPrime</code> function is what takes up the CPU load, and because we&#8217;re running testing the primality of all 2 million numbers inside a single thread, all of them have to be tested one after the other.  This is not great.  Instead, because we have more than one CPU core, we can give the other cores chances to do some of the work for us.</p>
+
+<p>If you were writing a Java or C++ program, you&#8217;d:
+- make a variable for the sum
+- loop from 1 to 2 million
+- spawn a new thread to do the primality test
+- inside the thread, if the primality test succeeds, lock the access to the <code>sum</code> variable, update <code>sum</code>, unlock</p>
+
+<p>Programs like this have a higher complexity than it should.  It may not look like it&#8217;s too complicated for this case, but synchronization using <a href="http://en.wikipedia.org/wiki/Lock_(computer_science">locks</a>#Disadvantages) has inherent problems and is usually a source of bugs and defects.  Also, spawning as many threads as you can normally won&#8217;t give you more throughput.  On the contrary, if you hand the OS more threads at once than the number of physical cores, context switching will happen and it will decrease your performance.</p>
+
+<p>Go&#8217;s approach is very similar to Erlang&#8217;s in concept.  In Erlang, the actor processes can&#8217;t share variables, but instead, they can send data to the other processes.  In Go, goroutines normally don&#8217;t share variables, but they communicate via the use of channels.</p>
+
+<h2>Channels</h2>
+
+<p>For this problem, we need to have the following channels:
+- jobs: the outstanding jobs need to be performed.  Each job is a number whose primality needs to be tested.  It&#8217;s a buffered channel whose size is the number of physical cores.
+- results: the prime numbers that are already tested.  Buffered channel.  Can be as big as reasonable.
+- done: whether all workers have finished their job. Also a buffered channel whose size is the number of physical cores.</p>
+
+<h2>Goroutines</h2>
+
+<p>We need the following goroutines to:
+- take the next number and put it in the <code>jobs</code> channel
+- receive the next available job, run primality test, put the number on the <code>results</code> channel if succeeded, and signal the <code>done</code> channel.
+- receive the signal from the <code>done</code> channel.  If no signals are received, we have done all the primality test.</p>
+
+<p>Finally, we need to have a function to sum up all results.</p>
+
+<h2>Data structures</h2>
+
+<p>We want an abstraction of a <code>Job</code>.  In Go, that&#8217;s a struct:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">type</span> <span class="nx">Job</span> <span class="kd">struct</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">n</span> <span class="kt">int</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="kt">int</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>A job knows what number to test, and the results channel to which we can send the result.</p>
+
+<p>A job also knows how to <code>Do</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="p">(</span><span class="nx">job</span> <span class="o">*</span><span class="nx">Job</span><span class="p">)</span> <span class="nx">Do</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">isPrime</span><span class="p">(</span><span class="nx">job</span><span class="p">.</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">job</span><span class="p">.</span><span class="nx">results</span> <span class="o">&lt;-</span> <span class="nx">job</span><span class="p">.</span><span class="nx">n</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In Go, a function with a receiver is practically a method on a struct and is able to be called with <code>receiver.method</code>.</p>
+
+<h2>Rewrite sumPrimesUpto</h2>
+
+<p>Now, rewrite the <code>sumPrimesUpto</code> function:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">var</span> <span class="nx">workers</span> <span class="p">=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">NumCPU</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">sumPrimesUpto</span><span class="p">(</span><span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">jobs</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">,</span> <span class="nx">workers</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">results</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">done</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{},</span> <span class="nx">workers</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">go</span> <span class="nx">addJobs</span><span class="p">(</span><span class="nx">jobs</span><span class="p">,</span> <span class="nx">results</span><span class="p">,</span> <span class="nx">n</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">workers</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">go</span> <span class="nx">doJobs</span><span class="p">(</span><span class="nx">done</span><span class="p">,</span> <span class="nx">jobs</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">go</span> <span class="nx">wait</span><span class="p">(</span><span class="nx">done</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">tally</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>First, we need to know how many CPU cores the underlying platform knows about.  We only make the channel as big as the number of CPU cores.</p>
+
+<p>Then, we make the channels.  One thing to note is that the <code>done</code> channel receives an empty <code>struct</code>, because we use that only for signaling.  We don&#8217;t really care what value of the signal is.  We could define a surrogate type: <code>type Signal struct{}</code>, but an anonymous type will do just fine.</p>
+
+<p>After that, we call <code>addJobs</code> as a goroutine.  The line <code>jobs &lt;- Job{i, results}</code> will block if the channel is already full.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">addJobs</span><span class="p">(</span><span class="nx">jobs</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="nx">Job</span><span class="p">,</span> <span class="nx">results</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="kt">int</span><span class="p">,</span> <span class="nx">n</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;=</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">jobs</span> <span class="o">&lt;-</span> <span class="nx">Job</span><span class="p">{</span><span class="nx">i</span><span class="p">,</span> <span class="nx">results</span><span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span><span class="nx">jobs</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>In a separate goroutine, we take the jobs from the <code>jobs</code> channel and process them in <code>doJobs</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">doJobs</span><span class="p">(</span><span class="nx">done</span> <span class="kd">chan</span><span class="o">&lt;-</span><span class="kd">struct</span><span class="p">{},</span> <span class="nx">jobs</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="nx">Job</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">job</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">jobs</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">job</span><span class="p">.</span><span class="nx">Do</span><span class="p">()</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nx">done</span> <span class="o">&lt;-</span> <span class="kd">struct</span><span class="p">{}{}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We also signal the <code>done</code> channel when the job is done.  <code>struct{}{}</code> creates an instance of the anonymous type we use as the signal.</p>
+
+<p>In another separate goroutine, we wait until there&#8217;s no more signals on the <code>done</code> channel.  This means that we have finished processing all jobs:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">wait</span><span class="p">(</span><span class="nx">done</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kd">struct</span><span class="p">{},</span> <span class="nx">results</span> <span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nx">workers</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>        <span class="o">&lt;-</span><span class="nx">done</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="nb">close</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>At this point, we can safely close the <code>results</code> channel as there won&#8217;t be any new results coming in.</p>
+
+<p>Finally, we can run <code>tally</code> on the results channel.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kd">func</span> <span class="nx">tally</span><span class="p">(</span><span class="nx">results</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">int</span> <span class="p">{</span>
+</span><span class='line'>    <span class="nx">retval</span> <span class="o">:=</span> <span class="mi">0</span>
+</span><span class='line'>    <span class="k">for</span> <span class="nx">result</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">results</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">retval</span> <span class="o">+=</span> <span class="nx">result</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">retval</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One thing worth mentioning is that even though the channels we made are all bi-directional channels, in the specific functions, we can make them more restrictive by making them send-only (chan&lt;- Type) or receive-only (&lt;-chan Type) according to their actual usage in the local function to avoid accidents.</p>
+
+<p>The full gist can be found <a href="https://gist.github.com/kevinjqiu/7568264#file-sumprimes-go">here</a>.</p>
+
+<h2>Performance</h2>
+
+<p>So how does this concurrent version faire?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'> <span class="err">$</span> <span class="nx">time</span> <span class="k">go</span> <span class="nx">run</span> <span class="nx">sumprimes</span><span class="p">.</span><span class="k">go</span> <span class="mi">2000000</span>
+</span><span class='line'> <span class="nx">CPUS</span><span class="p">=</span><span class="mi">4</span>
+</span><span class='line'> <span class="mi">142913828923</span>
+</span><span class='line'>
+</span><span class='line'> <span class="nx">real</span>    <span class="mi">0</span><span class="nx">m12</span><span class="mf">.534</span><span class="nx">s</span>
+</span><span class='line'> <span class="nx">user</span>    <span class="mi">0</span><span class="nx">m44</span><span class="mf">.289</span><span class="nx">s</span>
+</span><span class='line'> <span class="nx">sys</span>     <span class="mi">0</span><span class="nx">m0</span><span class="mf">.175</span><span class="nx">s</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>On my Quad Core i7, it takes 12 seconds, almost twice as fast as the non-concurrent version!  And if you open System Monitor, you can see all 4 cores are running near 100%.</p>
+
+<h1>Conclusion</h1>
+
+<p>So there&#8217;s my first dip into Go&#8217;s concurrency with an old problem. I like the concurrency primitives Go provides, even though it takes some getting used to.  Conceptually, goroutines are very similar to Erlang&#8217;s actors.  Go has the advantage of a C-ish syntax that doesn&#8217;t look like Prolog and it doesn&#8217;t require a separate runtime as Erlang does.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-11-20T11:53:00-05:00" pubdate data-updated="true">Nov 20<span>th</span>, 2013</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/concurrency/'>concurrency</a>, <a class='category' href='/blog/categories/golang-/'>golang,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2012/09/19/ctf2-dot-0-problem-3/" title="Previous Post: Stripe Capture The Flag 2.0 - Problem 3">&laquo; Stripe Capture The Flag 2.0 - Problem 3</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/';
+        var disqus_url = 'http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

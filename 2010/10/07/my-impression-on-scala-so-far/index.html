@@ -1,0 +1,390 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My impression on Scala so far - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="I&#8217;ve been exploring Scala on and off for some time now. Here&#8217;s my highly subjective and very limited impression of Scala. What I like &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">My Impression on Scala So Far</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-07T20:01:00-04:00" pubdate data-updated="true">Oct 7<span>th</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>I&#8217;ve been exploring Scala on and off for some time now. Here&#8217;s my highly subjective and very limited impression of Scala.</p>
+
+<p>What I like about Scala:</p>
+
+<h2>0) It&#8217;s statically-typed language.</h2>
+
+<p>That&#8217;s right! I don&#8217;t care what you ninjas say. As much as I love dynamic languages, I just prefer statically typed language for big projects. The benefit of having type information is enormous for a project with a large code base. I know you have to write unit tests for it anyways, but when 80% of your unit test code is checking types, it&#8217;s just counter-productive.</p>
+
+<h2>1) The ability to combine functional programming style with OOP.</h2>
+
+<p>This is what Scala is known for - a hybrid language that boasts the better in both OOP world and FP world. I&#8217;m not a functional programming purist, but I think Scala did a good job blending the functional programming elements into OOP. Writing Scala programs, I find myself much more empowered to be able to choose from both styles where I see fit. The ability to pass functions around and apply high order functions can significantly reduce boilerplate code and visual clutter.</p>
+
+<h2>2) The ability to create your own control flow (well, sort of).</h2>
+
+<p>I had a <a href="http://reminiscential.wordpress.com/2010/09/29/scala-use-function-currying/">blog post</a> about how to use function curry to create a customized control flow. This is very empowering and yet, it&#8217;s not an one-off syntactic sugar that&#8217;s sprinkled randomly into the language like some other language would do. Customization of control flow is a result of combining generic language features (such as currying, by-name parameter, implicit conversion, etc).</p>
+
+<h2>3) Object instead of static</h2>
+
+<p>Scala does away with the Java static keyword. Instead, it provides &#8220;object&#8221; keyword to define a class that only has one instance. It has the same power as singleton design pattern, without the extra boilerplate code. (if you think implementing singleton in Java is simple, think again. Especially in the multi-threaded context). Also, you can use the same construct to define &#8220;companion&#8221; objects, which can be used to implement the factory pattern, and put in miscellaneous methods, implicit conversion methods and so on. Extremely powerful yet elegant.</p>
+
+<h2>4) Operator overloading (well, sort of).</h2>
+
+<p>OK, it&#8217;s not exactly operator overloading - Scala allows many non-alpha-numeric characters in the method name, so operators are essentially methods. duh! if you think about it&#8230;why should + be treated any different from <code>add()</code>? Being able to use special characters in method names makes code easy to understand. However, I&#8217;m a bit disappointed that question mark <code>?</code> cannot be used in method names&#8230;One of the things I liked about LISP is you can define a function <code>(odd? (x) (...))</code> and readers immediately know this function returns a boolean. I don&#8217;t have to ponder whether I should name it <code>isOdd()</code> or <code>hasChildren()</code>. Anyway&#8230;</p>
+
+<h2>5) Traits</h2>
+
+<p>In most cases, multiple inheritance is manageable. Seems Java threw the baby out with the bath water - rejecting multiple inheritance completely. It&#8217;s ironic that the AOP guys cracks open Java classes in the byte code level to do the &#8220;mixins&#8221;&#8230;With Scala, this seems to be natural.</p>
+
+<h2>6) Built-in parser-combinator library</h2>
+
+<p>It&#8217;s easy to do some non-mission critical parsing using the Scala standard library. The library itself is implemented as an internal DSL such that writing parser rules feels like writing EBNF directly.</p>
+
+<p>Here&#8217;s what&#8217;s not so hot for me so far:</p>
+
+<h2>1) The generics still is obtrusive sometimes.</h2>
+
+<p>That said, however, it&#8217;s vastly superior than Java&#8217;s generics system with far better type inferencing. But sometimes, you still have to write down a lot of types especially on a parameterized method. What&#8217;s worse is because Scala is more strict than Java wrt types, you cannot ignore generic types the way you can in Java code. Moreover, because Scala runs on JVM, and because of type-erasure, you still can&#8217;t write code such as val t = new T()&#8230;although we can&#8217;t blame this on Scala.</p>
+
+<h2>2) The collection library.</h2>
+
+<p>For each collection data structure, Scala has the mutable implementation, immutable implementation, and the native Java Collection Library. If you&#8217;re writing code that calls Java library, very often you have to wrap JCL lists/maps/sets into the Scala ones, because you want to use the nice functional features Scala provides. I&#8217;m not smart enough to know a better solution to this, I&#8217;m just merely pointing out a sore spot. Clojure has a very clever and elegant way of integrating JCL data structures into Clojure code, but since Clojure and Scala are vastly different, I don&#8217;t know how relevant this is.</p>
+
+<h2>3) Start up time</h2>
+
+<p>One of Scala&#8217;s goal is to be able to both scale up and scale down. Scala programs can be run as scripts by the interpreter, but it can&#8217;t compete with Python or Ruby in terms of development turn-around time in terms of scripting. Again, this is because of the dreadful JVM startup process.</p>
+
+<h2>4) Lack of good tooling</h2>
+
+<p>The best Scala development environment I found so far is the Scala plugin for IntelliJ. It&#8217;s still not great for debugging, but for coding and integration with Maven and such, it&#8217;s great. The Eclipse plugin lags significantly, despite having built a brand new website and seemingly having more resource pour into it&#8230;I know I shouldn&#8217;t be overly critical of a community effort, but it&#8217;s just frustrating that it can&#8217;t even do auto import of classes&#8230;</p>
+
+<p>Overall, I think Scala really has the potential to become a big name in the programming language landscape. It can do everything Java can and does better. It has so much features that Java doesn&#8217;t dare to add to keep backward compatibility or keep the language dead simple or politics or whatever reason&#8230;</p>
+
+<p>Scala is not a hype, but in order to be adopted more rapidly, I think it needs to</p>
+
+<ol>
+<li><p>Stablize the language and core library.</p></li>
+<li><p>Tooling, tooling, tooling! Seriously.</p></li>
+</ol>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-10-07T20:01:00-04:00" pubdate data-updated="true">Oct 7<span>th</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/09/29/use-function-currying-to-reduce-repetition-and-make-code-clean/" title="Previous Post: Use function currying to reduce repetition and make code clean">&laquo; Use function currying to reduce repetition and make code clean</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/10/22/use-python-decorator-to-curry-functions/" title="Next Post: Use Python decorator to curry functions">Use Python decorator to curry functions &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/10/07/my-impression-on-scala-so-far/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

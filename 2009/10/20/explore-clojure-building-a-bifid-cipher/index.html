@@ -1,0 +1,558 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Explore Clojure: Building a Bifid cipher - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="Lately I’ve been teaching myself Clojure, a Lisp dialect on the JVM platform. I still love Erlang and still learning it, but Clojure has a special &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2009/10/20/explore-clojure-building-a-bifid-cipher/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Explore Clojure: Building a Bifid Cipher</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-10-20T00:00:00-04:00" pubdate data-updated="true">Oct 20<span>th</span>, 2009</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Lately I’ve been teaching myself <a href="http://clojure.org">Clojure</a>, a Lisp dialect on the JVM platform. I still love Erlang and still learning it, but Clojure has a special draw for me being a JVM language and its Lisp roots. I studied Scheme (another Lisp dialect) in my college years and deemed it purely academic. However, Clojure has the potential of changing this and bring the expressiveness of Lisp and the power of functional programming to the Java world.</p>
+
+<p>The best way to learn a language is to use it to solve some non-trivial practical problems. I stumbled <a href="http://programmingpraxis.com/2009/10/13/bifid-cipher/">this</a> problem on <a href="http://programmingpraxis.com/">Programming Praxis</a>. It’s about building a <a href="http://en.wikipedia.org/wiki/Bifid_cipher">Bifid</a> cipher, which I thought could be a good practical problem for me to solve in Clojure.</p>
+
+<h2>Polybius Square</h2>
+
+<p>Bifid cipher is based on <a href="http://en.wikipedia.org/wiki/Polybius_square">Polybius Square</a>, which looks like this:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>  1 2 3 4 5
+</span><span class='line'>1 B G W K Z
+</span><span class='line'>2 Q P N D S
+</span><span class='line'>3 I O A X E
+</span><span class='line'>4 F C L U M
+</span><span class='line'>5 T H Y V R</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Every encodable letter is given a vector value, which is the coordinate in this square. For example, <code>X=[3 4]</code>, <code>H=[5 2]</code>. The first task would be building the Polybius square in Clojure.</p>
+
+<p>My function <code>polybius-square</code> is going to take 2 parameters: <code>charset</code> is a list of encodable characters, and <code>size</code> is the size of the Polybius square.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">polybius-square</span>
+</span><span class='line'>  <span class="s">&quot;Polybius square by the given charset and size&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">charset</span> <span class="nv">square-size</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">vector </span><span class="nv">%1</span> <span class="p">[</span><span class="nv">%2</span> <span class="nv">%3</span><span class="p">])</span> <span class="nv">charset</span>
+</span><span class='line'>    <span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nv">x</span> <span class="p">(</span><span class="nb">range </span><span class="mi">1</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">square-size</span><span class="p">))</span>, <span class="nv">y</span> <span class="p">(</span><span class="nb">range </span><span class="mi">1</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">square-size</span><span class="p">))]</span> <span class="nv">x</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">(</span><span class="nb">take </span><span class="p">(</span><span class="nb">* </span><span class="nv">square-size</span> <span class="nv">square-size</span><span class="p">)</span> <span class="p">(</span><span class="nb">cycle </span><span class="p">(</span><span class="nb">range </span><span class="mi">1</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">square-size</span><span class="p">))))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let’s see how this works. Suppose you’re calling this function with
+<code>(polybius-square "ABCDE" 3)</code>, <code>charset</code> is bound to “ABCDE” and <code>size</code> is bound to 3. What I want is a seq of vectors in the form of: <code>(\Letter [x y])</code> where <code>x</code> and <code>y</code> are the coordinates. It’s natural to use <code>map</code>, with the function-to-map taking three parameters and vectorize them. That’s what the anonymous function does:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="o">#</span><span class="p">(</span><span class="nb">vector </span><span class="nv">%1</span> <span class="p">[</span><span class="nv">%2</span> <span class="nv">%3</span><span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>%1</code> is the letter, <code>%2</code> and <code>%3</code> are the coordinates. I want the coordinate sequence to be like this: <code>[1 1], [1 2], [1 3], [2 1], [2 2], [2 3]</code>. In imperative language, you’d use a nested for loop, but we’ve established that’s ugly. We want the parameters fed to map to be of the following:
+<code>"ABCDEFGHJI" (1 1 1 2 2 2 3 3 3) (1 2 3 1 2 3 1 2 3 1 2 3)</code></p>
+
+<p>To generate the first list, we use list comprehension:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="nb">for </span><span class="p">[</span> <span class="nv">x</span> <span class="p">(</span><span class="nb">range </span><span class="mi">1</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">square-size</span><span class="p">))</span>, <span class="nv">y</span> <span class="p">(</span><span class="nb">range </span><span class="mi">1</span> <span class="p">(</span><span class="nb">+ </span><span class="mi">1</span> <span class="nv">square-size</span><span class="p">))]</span> <span class="nv">x</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It reads: for every <code>x</code> in range 1 to <code>square-size</code>+1 (because “range” is right-exclusive) and for every <code>y</code> in the same range, output the value of <code>x</code> and take the whole output as the list. Because the binding of <code>y</code> comes later, and Lisp evaluates from right to left, the result of this list comprehension is <code>(1 1 1 2 2 2 3 3 3)</code></p>
+
+<p>Now let’s look at the other list: <code>(1 2 3 1 2 3 1 2 3)</code> – a cyclic list. Fortunately, Clojure has a built-in <code>cycle</code> function, which returns a lazy sequence of cycles of a collection. We want to call it with cycle <code>'(1 2 3)</code>, so it’s going to be <code>(cycle (range 1 (+ 1 square-size)))</code>. Because cycle will be evaluated to an infinite sequence, we have to tell it when to stop.</p>
+
+<p>When you see the square as a flat list, it’s clear that the cycle should stop when it reaches <code>square-size^2</code>, hence <code>(take (\* square-size square-size) (cycle (range 1 (+ 1 square-size))))</code>.</p>
+
+<h2>The codec maps</h2>
+
+<p>After the Polybius square is built, we have the bases for our encryption. However, it’s not user-friendly: it’s a flat list of tuples. We want two maps for fast searching from letters to their encoding forms <code>(letter-2-code)</code> and from transposed vectors to the letters <code>(transposed-2-letter)</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn- </span><span class="nv">letter-2-code</span>
+</span><span class='line'>  <span class="s">&quot;Produce a mapping between letters and their codes&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">square</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">letfn</span> <span class="p">[(</span><span class="nf">helper</span> <span class="p">[</span><span class="nv">the-square</span> <span class="nv">the-map</span><span class="p">]</span>
+</span><span class='line'>          <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">empty?</span> <span class="nv">the-square</span><span class="p">)</span>
+</span><span class='line'>            <span class="nv">the-map</span>
+</span><span class='line'>            <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">the-item</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-square</span><span class="p">)</span>
+</span><span class='line'>                  <span class="nv">the-key</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-item</span><span class="p">)</span>
+</span><span class='line'>                  <span class="nv">the-number</span> <span class="p">(</span><span class="nb">second </span><span class="nv">the-item</span><span class="p">)]</span>
+</span><span class='line'>              <span class="p">(</span><span class="nf">recur</span> <span class="p">(</span><span class="nb">rest </span><span class="nv">the-square</span><span class="p">)</span> <span class="p">(</span><span class="nb">assoc </span><span class="nv">the-map</span> <span class="nv">the-key</span> <span class="nv">the-number</span><span class="p">)))))]</span>
+</span><span class='line'>    <span class="p">(</span><span class="nf">helper</span> <span class="nv">square</span> <span class="p">(</span><span class="nf">empty</span> <span class="nv">hash-map</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The strategy here is to walk through the list, add each item to a <code>hash-map</code>. Here we define an inner function, which is basically a recursive helper. The function itself is pretty straightforward. Take note that in Clojure, when you need to do tail recursion, always use <code>recur</code> instead of calling the function by its name. This is because JVM cannot do automatic tail cut optimization (TCO), but Clojure does the optimization through the <code>recur</code> function. After the binding, we kick off the recursion by calling it with the initial list.</p>
+
+<p>In the similar fashion, we have:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn- </span><span class="nv">transposed-2-letter</span>
+</span><span class='line'>  <span class="s">&quot;Produce a mapping between the transposed codes to letter&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">square</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="nf">letfn</span> <span class="p">[(</span><span class="nf">helper</span> <span class="p">[</span><span class="nv">the-square</span> <span class="nv">the-map</span><span class="p">]</span>
+</span><span class='line'>            <span class="p">(</span><span class="k">if </span><span class="p">(</span><span class="nf">empty?</span> <span class="nv">the-square</span><span class="p">)</span>
+</span><span class='line'>              <span class="nv">the-map</span>
+</span><span class='line'>              <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">the-item</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-square</span><span class="p">)</span>
+</span><span class='line'>                    <span class="nv">the-key</span> <span class="p">(</span><span class="nb">second </span><span class="nv">the-item</span><span class="p">)</span>
+</span><span class='line'>                    <span class="nv">the-letter</span> <span class="p">(</span><span class="nb">first </span><span class="nv">the-item</span><span class="p">)]</span>
+</span><span class='line'>                <span class="p">(</span><span class="nf">recur</span> <span class="p">(</span><span class="nb">rest </span><span class="nv">the-square</span><span class="p">)</span> <span class="p">(</span><span class="nb">assoc </span><span class="nv">the-map</span> <span class="nv">the-key</span> <span class="nv">the-letter</span><span class="p">)))))]</span>
+</span><span class='line'>    <span class="p">(</span><span class="nf">helper</span> <span class="nv">square</span> <span class="p">(</span><span class="nf">empty</span> <span class="nv">hash-map</span><span class="p">))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Encode</h2>
+
+<p>Now comes the <code>encode</code> function. It’s important to note that the encoding will be different if a different polybius square is provided. Therefore, both <code>encode</code> and <code>decode</code> functions take the Polybius square as parameter.</p>
+
+<p>During the encoding phase, we first convert every character in the message into a vector, then reorganize the vectors. To better illustrate, we use an example:
+Suppose we have the following mapping:
+<code>{I [3 3], H [3 2], G [3 1], F [2 3], E [2 2], D [2 1], C [1 3], B [1 2], A [1 1]}</code>
+and we want to encode the word “CEDE”
+<code>CEDE =&gt; ([1 3] [2 2] [2 1] [2 2])</code>, then we want to transpose the “matrix” composed of the above vectors, so it would be like:
+<code>([1 2] [2 2] [3 2] [1 2])</code>, and finally looking up every item in the transposed-2-letter mapping</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">{[</span><span class="mi">3</span> <span class="mi">3</span><span class="p">]</span> <span class="nv">I</span>, <span class="p">[</span><span class="mi">3</span> <span class="mi">2</span><span class="p">]</span> <span class="nv">H</span>, <span class="p">[</span><span class="mi">3</span> <span class="mi">1</span><span class="p">]</span> <span class="nv">G</span>, <span class="p">[</span><span class="mi">2</span> <span class="mi">3</span><span class="p">]</span> <span class="nv">F</span>, <span class="p">[</span><span class="mi">2</span> <span class="mi">2</span><span class="p">]</span> <span class="nv">E</span>, <span class="p">[</span><span class="mi">2</span> <span class="mi">1</span><span class="p">]</span> <span class="nv">D</span>, <span class="p">[</span><span class="mi">1</span> <span class="mi">3</span><span class="p">]</span> <span class="nv">C</span>, <span class="p">[</span><span class="mi">1</span> <span class="mi">2</span><span class="p">]</span> <span class="nv">B</span>, <span class="p">[</span><span class="mi">1</span> <span class="mi">1</span><span class="p">]</span> <span class="nv">A</span><span class="p">}</span>
+</span><span class='line'><span class="nv">=&gt;BEHB</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To get a mapping of message to vectors, we again map a function to the list:
+<code>(map #(get l2c % %) message)</code> (l2c has been bound)</p>
+
+<p>Then we apply the interleave function to the result, this gives:
+<code>(1 2 2 2 3 2 1 2)</code>. This is good but we want a list of vectors instead of a flat list. Clojure provides partition function, which does exactly it:
+<code>(partition 2 '(1 2 2 2 3 2 1 2))</code>
+gives:
+<code>([1 2] [2 2] [3 2] [1 2])</code></p>
+
+<p>Then, we want to lookup every item in the result in the <code>transposed-to-letter</code> map and get a list of mapped characters. To achieve this, again, we use map, providing a different mapping:
+<code>(map #(get tr2l % %) ...)</code> (tr2l is bound)</p>
+
+<p>This returns a list of characters. We want a string, so we concatenate the characters by applying <code>str</code> function:
+<code>(apply str (map #(get tr2l % %) ...))</code></p>
+
+<p>Here’s the complete code:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">encode</span>
+</span><span class='line'>  <span class="s">&quot;Return the message encoded by the specified polybius-square&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">message</span> <span class="nv">polybius-square</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">l2c</span> <span class="p">(</span><span class="nf">letter-2-code</span> <span class="nv">polybius-square</span><span class="p">)</span>
+</span><span class='line'>        <span class="nv">tr2l</span> <span class="p">(</span><span class="nf">transposed-2-letter</span> <span class="nv">polybius-square</span><span class="p">)]</span>
+</span><span class='line'>    <span class="p">(</span><span class="nb">apply </span><span class="nv">str</span>
+</span><span class='line'>      <span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">tr2l</span> <span class="nv">%</span> <span class="nv">%</span><span class="p">)</span> <span class="p">(</span><span class="nf">partition</span> <span class="mi">2</span> <span class="p">(</span><span class="nb">apply interleave </span><span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">l2c</span> <span class="nv">%</span> <span class="nv">%</span><span class="p">)</span> <span class="nv">message</span><span class="p">)))))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here you see the expressiveness of Clojure: all operations are chained together and formed in expression.</p>
+
+<p>The <code>decode</code> function behaves similarly. The only trick is we need to split the translated code list in two. We use <code>partition</code> method again, with <code>size</code> being half of the entire list.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">decode</span>
+</span><span class='line'>  <span class="s">&quot;Return the decoded message using the specified polybius-square&quot;</span>
+</span><span class='line'>  <span class="p">[</span><span class="nv">encoded</span> <span class="nv">polybius-square</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">l2c</span> <span class="p">(</span><span class="nf">letter-2-code</span> <span class="nv">polybius-square</span><span class="p">)</span>
+</span><span class='line'>        <span class="nv">c2l</span> <span class="p">(</span><span class="nf">transposed-2-letter</span> <span class="nv">polybius-square</span><span class="p">)</span>
+</span><span class='line'>        <span class="nv">codes</span> <span class="p">(</span><span class="nb">apply concat </span><span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">l2c</span> <span class="nv">%</span> <span class="nv">%</span><span class="p">)</span> <span class="nv">encoded</span><span class="p">))</span>
+</span><span class='line'>        <span class="nv">len</span> <span class="p">(</span><span class="nb">count </span><span class="nv">codes</span><span class="p">)</span>
+</span><span class='line'>        <span class="nv">parts</span> <span class="p">(</span><span class="nf">partition</span> <span class="p">(</span><span class="nb">/ </span><span class="nv">len</span> <span class="mi">2</span><span class="p">)</span> <span class="nv">codes</span><span class="p">)]</span>
+</span><span class='line'>    <span class="p">(</span><span class="nb">apply str </span><span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">c2l</span> <span class="nv">%1</span> <span class="nv">%1</span><span class="p">)</span> <span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">vector </span><span class="nv">%1</span> <span class="nv">%2</span><span class="p">)</span> <span class="p">(</span><span class="nb">first </span><span class="nv">parts</span><span class="p">)</span> <span class="p">(</span><span class="nb">second </span><span class="nv">parts</span><span class="p">))))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Putting it together</h2>
+
+<p>Now with all the pieces are in place, we can put it together by writing a simple test:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='clojure'><span class='line'><span class="p">(</span><span class="kd">defn </span><span class="nv">-main</span>
+</span><span class='line'>  <span class="s">&quot;A simple test case entry point&quot;</span>
+</span><span class='line'>  <span class="p">[]</span>
+</span><span class='line'>  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">square</span> <span class="p">(</span><span class="nf">polybius-square</span> <span class="s">&quot;ABCDEFGHIKLMNOPQRSTUVWXYZ&quot;</span> <span class="mi">5</span><span class="p">)]</span>
+</span><span class='line'>    <span class="p">(</span><span class="k">do </span><span class="p">(</span><span class="nb">println </span><span class="p">(</span><span class="nf">encode</span> <span class="s">&quot;BIFIDCIPHER&quot;</span> <span class="nv">square</span><span class="p">))</span>
+</span><span class='line'>      <span class="p">(</span><span class="nb">println </span><span class="p">(</span><span class="nf">decode</span> <span class="p">(</span><span class="nf">encode</span> <span class="s">&quot;BIFIDCIPHER&quot;</span> <span class="nv">square</span><span class="p">)</span> <span class="nv">square</span><span class="p">)))))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Output:</p>
+
+<p>BGAHFRQTOXW
+BIFIDCIPHER</p>
+
+<p>Have the complete source code <a href="http://github.com/kevinjqiu/bifid-clj">here</a>, I’m sure there are a lot to be improved of the above implementation of the Bifid cipher. Especially currently I have no elegant way to solve the situation where the letter to be encoded is not in the Polybius square. Also, I’m sure my code isn’t entirely the idiomatic Clojure. If you have any suggestions, don’t hesitate to write a comment.</p>
+
+<p>Although I have been learning Clojure for 3 days, I’m already enjoying its expressiveness and the clean look. As a Java programmer, Clojure also gives me the benefit of full access to the Java land. The potential is endless!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-10-20T00:00:00-04:00" pubdate data-updated="true">Oct 20<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/clojure/'>clojure</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2009/10/20/explore-clojure-building-a-bifid-cipher/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2009/10/20/explore-clojure-building-a-bifid-cipher/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2009/06/12/enable-auto-complete-in-a-pdb-session/" title="Previous Post: Enable Auto-complete in a PDB session">&laquo; Enable Auto-complete in a PDB session</a>
+      
+      
+        <a class="basic-alignment right" href="/2009/11/10/programming-collective-intelligence-in-clojure/" title="Next Post: Programming Collective Intelligence in Clojure">Programming Collective Intelligence in Clojure &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2009/10/20/explore-clojure-building-a-bifid-cipher/';
+        var disqus_url = 'http://kevinjqiu.github.com/2009/10/20/explore-clojure-building-a-bifid-cipher/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

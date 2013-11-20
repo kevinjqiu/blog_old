@@ -1,0 +1,418 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Finding Happy Numbers using Scala - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="The problem was posted on Programming Praxis. The algorithm itself is pretty straightforward, anyone can do it with a few if/else/fors, but to coerce &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Finding Happy Numbers Using Scala</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-07-23T19:48:00-04:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2010</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The problem was posted on <a href="http://programmingpraxis.com/2010/07/23/happy-numbers/">Programming Praxis</a>. The algorithm itself is pretty straightforward, anyone can do it with a few if/else/fors, but to coerce myself to think functionally, I decide to practice writing it in <a href="http://www.scala-lang.org">Scala</a>.</p>
+
+<p>A number is a happy number if the sum of square of its digits eventually arrive at 1. For example, 7=&gt;7<sup>2</sup>=49=&gt;4<sup>2</sup>+9<sup>2</sup>=97=&gt;9<sup>2</sup>+7<sup>2</sup>=&gt;130=1<sup>2</sup>+3<sup>2</sup>+0<sup>2</sup>=10=&gt;1<sup>2</sup>+0<sup>2</sup>=1, so 7 is a happy number. 17 is not a happy number because by applying the above process, it goes into a loop.</p>
+
+<p>Step1: calculating the sum of squares of a number</p>
+
+<p>To get a list of numbers from a given number, we can first convert the number into a string, and then map every character of the string to its corresponding integer value. A more mathematical way is to divide the number continually by 10 until the original number becomes 0, adding the remainder to a list each time&#8230;The first method is easier to visualize, so here it goes:
+<code>n.toString.toCharArray.map{digit=&gt;Integer.valueOf(""+digit)}</code></p>
+
+<p>It&#8217;s quite wordy but I&#8217;ve yet to find a better way. I&#8217;m pretty sure there is so if you know, do inform me.</p>
+
+<p>Now I need to square each item in the list. So modify the above statement:
+<code>n.toString.toCharArray.map{digit=&amp;gt;Math.pow(Integer.valueOf(""+digit).doubleValue,2.0)}</code></p>
+
+<p>One thing bothers me is that I have to explicitly call <code>someInt.doubleValue</code>&#8230;I thought Scala does the implicit conversion for me? Then I realized <code>Integer.valueOf(...)</code> gives me <code>java.lang.Integer</code>, not <code>scala.lang.Int</code>. So I have to write a implicit conversion function myself:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">implicit</span> <span class="k">def</span> <span class="n">integer2double</span><span class="o">(</span><span class="n">i</span><span class="k">:</span><span class="kt">Integer</span><span class="o">)</span><span class="k">:</span><span class="kt">Double</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">doubleValue</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now I can get rid of the hideous <code>someInt.doubleValue</code>.</p>
+
+<p>Since we&#8217;re doing implicit conversion already, why not just implicitly convert a numeric character to a double so that it can be accepted by <code>Math.pow</code>?</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">implicit</span> <span class="k">def</span> <span class="n">char2double</span><span class="o">(</span><span class="n">ch</span><span class="k">:</span><span class="kt">Char</span><span class="o">)</span><span class="k">:</span><span class="kt">Double</span> <span class="o">=</span> <span class="nc">Integer</span><span class="o">.</span><span class="n">valueOf</span><span class="o">(</span><span class="s">&quot;&quot;</span> <span class="o">+</span> <span class="n">ch</span><span class="o">).</span><span class="n">doubleValue</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now the code can be shortened to</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Isn&#8217;t that sweet? Implicit conversion is cool but it&#8217;s easy to get carried away and do everything implicit, which makes the code hard to maintain, so there gotta be a balance somewhere. In the scope of this small exercise, I guess it&#8217;s OK to use it.</p>
+
+<p>Now that we have the squares of individual digits in a list, we can calculate the sum by reducing or folding it:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="o">((</span><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}).</span><span class="n">foldLeft</span><span class="o">(</span><span class="mf">0.0</span><span class="o">)</span> <span class="o">{</span> <span class="k">_</span> <span class="o">+</span> <span class="k">_</span> <span class="o">}).</span><span class="n">toInt</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>{\_ + \_}</code> seems a lot like line noise. The underscore converts the statement into a closure. It&#8217;s a shortcut for <code>(a,b)=&gt;a+b</code>. It&#8217;s succinct yet should be used sparingly.</p>
+
+<p>Step2:return</p>
+
+<p>lol, yeah, no extra fluff is needed. We can capture the constraints in one return statement, but before that, I need to decide on what states I need to carry on from each recursive step. (You know I&#8217;m going to use recursion, don&#8217;t you? :P)</p>
+
+<p>There are a couple of states involved:
+1. the limit. It&#8217;s the number of steps we allow before the final &#8220;1&#8221; is reached. It took number seven 5 steps to reach 1. This variable is the cut-off: if the given number can&#8217;t reach 1 before the limit, it&#8217;s considered unhappy (return <code>false</code>)
+2. the current number of steps
+3. the set of numbers already appeared. In the case of seven, the set is <code>{49 97 130 10}</code>. This set is used to determine if the calculations fall into a loop. If the current calculated number appears in this set, the original number is unhappy.</p>
+
+<p>So here&#8217;s our method:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">limit</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">numOfTries</span><span class="k">:</span><span class="kt">Int</span><span class="o">,</span> <span class="n">alreadySeen</span><span class="k">:</span><span class="kt">Set</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span><span class="kt">Boolean</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class='line'><span class="k">val</span> <span class="n">sos</span> <span class="k">=</span> <span class="o">((</span><span class="n">n</span><span class="o">.</span><span class="n">toString</span><span class="o">.</span><span class="n">toCharArray</span><span class="o">.</span><span class="n">map</span> <span class="o">{</span> <span class="n">digit</span> <span class="o">=&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="nc">Math</span><span class="o">.</span><span class="n">pow</span><span class="o">(</span><span class="n">digit</span><span class="o">,</span> <span class="mi">2</span><span class="o">)</span> <span class="o">}).</span><span class="n">foldLeft</span><span class="o">(</span><span class="mf">0.0</span><span class="o">)</span> <span class="o">{</span> <span class="k">_</span> <span class="o">+</span> <span class="k">_</span> <span class="o">}).</span><span class="n">toInt</span>
+</span><span class='line'><span class="k">return</span> <span class="n">sos</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">?</span> <span class="kc">true</span> <span class="k">:</span> <span class="o">(</span><span class="kt">!alreadySeen.contains</span><span class="o">(</span><span class="kt">sos</span><span class="o">)</span> <span class="kt">&amp;amp</span><span class="o">;</span><span class="kt">&amp;amp</span><span class="o">;</span> <span class="n">numOfTries</span><span class="o">+</span><span class="mi">1</span> <span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="k">=</span> <span class="n">limit</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">sos</span><span class="o">,</span> <span class="n">limit</span><span class="o">,</span> <span class="n">numOfTries</span><span class="o">+</span><span class="mi">1</span><span class="o">,</span> <span class="n">alreadySeen</span><span class="o">+</span><span class="n">sos</span><span class="o">))</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The second line basically says: when <code>sos</code> (sum of squares) is 1, return <code>true</code>, otherwise, is the number already in the set of numbers seen during the calculation?, if not, does the number of calculation exceed the limit? if not, repeat the calculation, with sos being the &#8220;original&#8221; number, increase the counter and put sos in the <code>alreadySeen</code> set.</p>
+
+<p>Note that this is a <a href="http://en.wikipedia.org/wiki/Tail_recursion">Tail recursion</a> function, we can add <code>@tailrec</code> annotation to the method to let the compiler optimize it - turn the recursion into a loop so that it won&#8217;t grow in stack.</p>
+
+<p>Now that we&#8217;ve had the body of the function, we can write an overload method that provides initial values:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="k">:</span><span class="kt">Int</span><span class="o">)</span><span class="k">:</span><span class="kt">Boolean</span> <span class="o">=</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="n">n</span><span class="o">,</span> <span class="mi">10</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="nc">Set</span><span class="o">[</span><span class="kt">Int</span><span class="o">]())</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>To find all happy numbers between 1 and 100:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="n">println</span> <span class="o">(</span><span class="mi">1</span> <span class="n">to</span> <span class="mi">100</span> <span class="n">filter</span> <span class="o">{</span> <span class="n">isHappyNumber</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="o">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2010-07-23T19:48:00-04:00" pubdate data-updated="true">Jul 23<span>rd</span>, 2010</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/scala/'>scala</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2010/06/09/launch-windows-explorer-and-goto-the-current-working-directory-in-shell/" title="Previous Post: Launch Windows Explorer and goto the current working directory in shell">&laquo; Launch Windows Explorer and goto the current working directory in shell</a>
+      
+      
+        <a class="basic-alignment right" href="/2010/09/29/use-function-currying-to-reduce-repetition-and-make-code-clean/" title="Next Post: Use function currying to reduce repetition and make code clean">Use function currying to reduce repetition and make code clean &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/';
+        var disqus_url = 'http://kevinjqiu.github.com/2010/07/23/finding-happy-numbers-using-scala/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

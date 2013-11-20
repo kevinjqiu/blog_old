@@ -1,0 +1,444 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Solving a GWT deferred binding mystery - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="This morning at work, I was running our GWT application with some deferred binding logic in it, and all of a sudden I got this ridiculous message: 1 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2009/11/18/solving-a-gwt-deferred-binding-mystery/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Solving a GWT Deferred Binding Mystery</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-11-18T10:55:00-05:00" pubdate data-updated="true">Nov 18<span>th</span>, 2009</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>This morning at work, I was running our GWT application with some deferred binding logic in it, and all of a sudden I got this ridiculous message:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[ERROR] Class 'mycompany.rebind.HistoryResourceGenerator' must derive from 'com.google.gwt.core.ext.Generator'
+</span><span class='line'>[ERROR] Failure while parsing XML
+</span><span class='line'>com.google.gwt.core.ext.UnableToCompleteException: (see previous log entries)
+</span><span class='line'>at com.google.gwt.dev.cfg.ModuleDefSchema$ObjAttrCvt.convertToArg(ModuleDefSchema.java:729)
+</span><span class='line'>at com.google.gwt.dev.util.xml.HandlerArgs.convertToArg(HandlerArgs.java:64)
+</span><span class='line'>at com.google.gwt.dev.util.xml.HandlerMethod.invokeBegin(HandlerMethod.java:214)
+</span><span class='line'>at com.google.gwt.dev.util.xml.ReflectiveParser$Impl.startElement(ReflectiveParser.java:257)
+</span><span class='line'>at com.sun.org.apache.xerces.internal.parsers.AbstractSAXParser.startElement(Abstract...)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It was running fine yesterday when I left work, and now it tells me that my generator isn’t a subclass of the GWT Generator??? Quickly pulled the source, and it’s as clear as day that my generator is properly written. Then what gives?</p>
+
+<p>Searching for an explanation, I pulled the GWT’s source code, and opened <code>com.google.gwt.dev.cfg.ModuleDefSchema</code> and here’s the method in question:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'>  <span class="kd">public</span> <span class="n">Object</span> <span class="nf">convertToArg</span><span class="o">(</span><span class="n">Schema</span> <span class="n">schema</span><span class="o">,</span> <span class="kt">int</span> <span class="n">lineNumber</span><span class="o">,</span> <span class="n">String</span> <span class="n">elemName</span><span class="o">,</span>
+</span><span class='line'>      <span class="n">String</span> <span class="n">attrName</span><span class="o">,</span> <span class="n">String</span> <span class="n">attrValue</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">UnableToCompleteException</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Object</span> <span class="n">found</span> <span class="o">=</span> <span class="n">singletonsByName</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">attrValue</span><span class="o">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">found</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="c1">// Found in the cache.</span>
+</span><span class='line'>      <span class="c1">//</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">found</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">foundClass</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>      <span class="c1">// Load the class.</span>
+</span><span class='line'>      <span class="c1">//</span>
+</span><span class='line'>      <span class="n">ClassLoader</span> <span class="n">cl</span> <span class="o">=</span> <span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">().</span><span class="na">getContextClassLoader</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">foundClass</span> <span class="o">=</span> <span class="n">cl</span><span class="o">.</span><span class="na">loadClass</span><span class="o">(</span><span class="n">attrValue</span><span class="o">);</span>
+</span><span class='line'>      <span class="n">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">T</span><span class="o">&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">foundClass</span><span class="o">.</span><span class="na">asSubclass</span><span class="o">(</span><span class="n">fReqdSuperclass</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="n">T</span> <span class="n">object</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">newInstance</span><span class="o">();</span>
+</span><span class='line'>      <span class="n">singletonsByName</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">attrValue</span><span class="o">,</span> <span class="n">object</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">return</span> <span class="n">object</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ClassCastException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">Messages</span><span class="o">.</span><span class="na">INVALID_CLASS_DERIVATION</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">logger</span><span class="o">,</span> <span class="n">foundClass</span><span class="o">,</span>
+</span><span class='line'>          <span class="n">fReqdSuperclass</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnableToCompleteException</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ClassNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">Messages</span><span class="o">.</span><span class="na">UNABLE_TO_LOAD_CLASS</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">logger</span><span class="o">,</span> <span class="n">attrValue</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnableToCompleteException</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InstantiationException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">Messages</span><span class="o">.</span><span class="na">UNABLE_TO_CREATE_OBJECT</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">logger</span><span class="o">,</span> <span class="n">attrValue</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnableToCompleteException</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IllegalAccessException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">Messages</span><span class="o">.</span><span class="na">UNABLE_TO_CREATE_OBJECT</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">logger</span><span class="o">,</span> <span class="n">attrValue</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+</span><span class='line'>      <span class="k">throw</span> <span class="k">new</span> <span class="nf">UnableToCompleteException</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Because the error message was from <code>Messages.INVALID\_CLASS\_DERIVATION</code>, I put a breakpoint on line 22:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="n">Messages</span><span class="o">.</span><span class="na">INVALID_CLASS_DERIVATION</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">logger</span><span class="o">,</span> <span class="n">foundClass</span><span class="o">,</span> <span class="n">fReqdSuperclass</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and started my app in debug mode. The breakpoint hits, and I noticed that the exception object is reporting <code>ClassCastException</code> from <code>JSONNull</code> to <code>JSONObject</code>. I quickly clicked: The error is from the class that fetches some resource over the net and plugged in to the generator. Following this lead, I found that the server resource the class was fetching wasn’t available any more, which caused the fetcher class to fail, and consequently, the <code>ClassCastException</code> is propagated to the generator and eventually <code>ModuleDefSchema</code>.</p>
+
+<p>The mysterious error message, however, has nothing to do with the real problem. I spent a lot of time thinking that my <code>Generator</code> is wrong, because that’s what the compiler says, but in fact, it’s not. I think the confusion can be avoided if the GWT compiler can log the actual exception object, instead of interpreting the exception for the user. That’s what they’re doing in the <code>try/catch</code> clause in the method shown above: the exception object <code>e</code> is not used in the case of <code>ClassCastException</code>…</p>
+
+<p>Well, the take-home message is: don’t always trust the GWT compiler message. Also, adding log more logging to your generator classes that can be indicative to where the actual problem is.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-11-18T10:55:00-05:00" pubdate data-updated="true">Nov 18<span>th</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/gwt-/'>gwt,</a>, <a class='category' href='/blog/categories/java/'>java</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2009/11/18/solving-a-gwt-deferred-binding-mystery/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2009/11/18/solving-a-gwt-deferred-binding-mystery/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2009/11/11/setting-up-a-clojure-project-with-maven/" title="Previous Post: Setting up a Clojure Project with Maven">&laquo; Setting up a Clojure Project with Maven</a>
+      
+      
+        <a class="basic-alignment right" href="/2009/12/18/setting-up-gwt2-project-with-gwt-maven-plugin/" title="Next Post: Setting up GWT2 project with gwt-maven-plugin">Setting up GWT2 project with gwt-maven-plugin &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2009/11/18/solving-a-gwt-deferred-binding-mystery/';
+        var disqus_url = 'http://kevinjqiu.github.com/2009/11/18/solving-a-gwt-deferred-binding-mystery/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

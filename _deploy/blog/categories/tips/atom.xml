@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: tips | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/tips/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Launch Windows Explorer and goto the current working directory in shell]]></title>
+    <link href="http://kevinjqiu.github.com/2010/06/09/launch-windows-explorer-and-goto-the-current-working-directory-in-shell/"/>
+    <updated>2010-06-09T19:45:00-04:00</updated>
+    <id>http://kevinjqiu.github.com/2010/06/09/launch-windows-explorer-and-goto-the-current-working-directory-in-shell</id>
+    <content type="html"><![CDATA[<p>I like working in the command prompt - it's fast and you can do batch processing, etc, but sometimes, I need a GUI (Windows explorer) to explore files in the current directory. I know I can type "explorer.exe" on the command line to launch Windows explorer, but can it automatically go to the directory I'm working in? The answer is yes, although hardly ever <a href="http://support.microsoft.com/kb/314853" title="">advertised</a></p>
+
+<p>Now, we need to find a way to find out the current working directory. On the command prompt, it's stored in the environment variable %CD%, so combine the two:</p>
+
+<p><code>
+explorer /root,%CD%
+</code></p>
+
+<p>and it works beautifully.</p>
+
+<p>Put this in a .bat file and put it on your path, you can launch Windows explorer anywhere and have it go directly to the folder you're in on the command line!</p>
+]]></content>
+  </entry>
+  
+</feed>

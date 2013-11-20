@@ -1,0 +1,545 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Fast and elegant way to sum primes in a gigantic range - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="The problem is taken from Project-Euler, which asks what is the sum of all prime numbers under 2 million. Traditional Approach Project-Euler has many &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Fast and Elegant Way to Sum Primes in a Gigantic Range</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-01T09:37:00-04:00" pubdate data-updated="true">Jun 1<span>st</span>, 2009</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>The problem is taken from <a href="http://projecteuler.net/">Project-Euler</a>, which asks what is the sum of all prime numbers under 2 million.</p>
+
+<h2>Traditional Approach</h2>
+
+<p>Project-Euler has many problems like this which looks ridiculously easy in theory, but practically impossible when using the old-school brute force way to solve them.</p>
+
+<p>Even after applying some well-known techniques to shrink the problem space, the computation still takes a long time (too long for me to stick around and wait it to finish). I tried using the <a href="http://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">sieve of Eratosthenes</a>, and the performance isn’t satisfying to say the least.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">solve</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">sum_all_primes_under</span><span class="p">(</span><span class="mi">2000000</span><span class="p">).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">sum_all_primes_under</span><span class="p">(</span><span class="nv">To</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="n">sieve</span><span class="p">(</span><span class="nn">lists</span><span class="p">:</span><span class="nf">seq</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nv">To</span><span class="p">),</span> <span class="nv">To</span><span class="p">).</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">sieve</span><span class="p">([],</span> <span class="p">_)</span> <span class="o">-&gt;</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="nf">sieve</span><span class="p">(</span><span class="nv">List</span><span class="p">,</span> <span class="nv">Range</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="p">[</span><span class="nv">Max</span><span class="p">|_]</span> <span class="o">=</span> <span class="nn">lists</span><span class="p">:</span><span class="nf">reverse</span><span class="p">(</span><span class="nv">List</span><span class="p">),</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nv">Max</span>  <span class="nv">List</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">false</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="p">[</span><span class="nv">H</span><span class="p">|</span><span class="nv">Rest</span><span class="p">]</span> <span class="o">=</span> <span class="nv">List</span><span class="p">,</span>
+</span><span class='line'>            <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;</span><span class="si">~p</span><span class="s"> </span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">H</span><span class="p">]),</span>
+</span><span class='line'>            <span class="nv">H</span> <span class="o">+</span> <span class="n">sieve</span><span class="p">(</span><span class="nn">lists</span><span class="p">:</span><span class="nf">filter</span><span class="p">(</span><span class="k">fun</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span><span class="o">-&gt;</span><span class="nv">X</span> <span class="ow">rem</span> <span class="nv">H</span> <span class="o">=/=</span> <span class="mi">0</span> <span class="k">end</span><span class="p">,</span> <span class="nv">Rest</span><span class="p">),</span> <span class="nv">Range</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>One thing to take note is that when executing the above program, only one core of the CPU is effectively utilized.</p>
+
+<p><img class="center" src="/assets/images/cpu1.png"></p>
+
+<h2>Concurrency Oriented Programming</h2>
+
+<p>In the concurrency oriented programming (COP, a term coined by Erlang’s inventor Joe Armstrong) model, you’re thinking in terms of separate entities and what responsibility is there for each of them. Think of them as individual human beings. They don’t have shared brains; one cannot influence the other by simply modify his or her brain tissues (well, under normal circumstance anyway). As human beings, our brains are disconnected from each other, <strong>but</strong> we share our knowledge through communication. We can modify other people’s memories by sending messages and vice versa. This is essentially what COP is – the entities are processes, and each has individual memories that’s not modifiable by other processes. Processes communicate with each other through message sending/receiving. This model is particularly good for scaling. Because the entities share nothing, it’s easy to get more entities without worrying that they don’t get along.</p>
+
+<p>Back to our problem. With the traditional approach, one process is to iterate through the 2 million numbers, determine if it’s a prime number, and add to the tally if it is. Think of it as one man doing all the job that there is.</p>
+
+<p>With the new model, here are the actors in our system:</p>
+
+<p><strong>Worker</strong>: A worker is responsible for gathering the prime numbers in a given range (sufficiently small), add them and report them to the tallier.</p>
+
+<p><strong>Tallier</strong>: A tallier waits for the results from the workers and sum the results up.</p>
+
+<p><strong>Manager (Solver)</strong>: The manager is responsible for dividing up the task, hiring workers to finish the task and tell the tallier which worker has been given a task so that the tallier can wait for the specific workers to send back the results.</p>
+
+<figure class='code'><figcaption><span>worker</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">worker</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>        <span class="p">{</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">L</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="nv">Sum</span> <span class="o">=</span> <span class="nn">lists</span><span class="p">:</span><span class="nf">sum</span><span class="p">(</span><span class="nn">lists</span><span class="p">:</span><span class="nf">filter</span><span class="p">(</span><span class="k">fun</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span><span class="o">-&gt;</span><span class="nn">mylib</span><span class="p">:</span><span class="nf">is_prime</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="k">end</span><span class="p">,</span> <span class="nv">L</span><span class="p">)),</span>
+</span><span class='line'>            <span class="nv">TallierPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="nv">Sum</span><span class="p">}</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The worker code is quite simple. After it’s created (hired by the manager), it waits for the manager to send over <code>{TallierPid, L}</code>, with <code>L</code> being the list of integers to work with. Then it filters out the prime numbers, and call <code>lists:sum()</code> on the result list, which gives the sum of the prime numbers in the list <code>L</code>.</p>
+
+<p>This doesn’t seem to look different if we were writing in the traditional way. Yes, but feeding the key difference here is that <strong>we’re not going to ask one worker to solve the entire problem domain</strong>. Instead, the manager is going to <strong>divide the task into smaller tasks so that it takes almost no time for a single worker to finish his or her work</strong>.</p>
+
+<figure class='code'><figcaption><span>manager</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">solve</span><span class="p">()</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="nv">TallierPid</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="n">euler</span><span class="p">,</span> <span class="n">tallier</span><span class="p">,</span> <span class="p">[</span><span class="n">self</span><span class="p">(),</span> <span class="p">[],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">false</span><span class="p">]),</span>
+</span><span class='line'>    <span class="n">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2000000</span><span class="p">),</span>
+</span><span class='line'>    <span class="c">%% worker assignment has finished</span>
+</span><span class='line'>    <span class="nv">TallierPid</span> <span class="o">!</span> <span class="p">{</span> <span class="n">self</span><span class="p">(),</span> <span class="n">true</span> <span class="p">},</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>        <span class="p">{</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">Result</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;Final tally: </span><span class="si">~p</span><span class="s"> </span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">Result</span><span class="p">])</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is only half of the manager code. First it spawns a tallier. We’ll look at the tallier code later.
+<code>solver(TallierPid, 2, 2000000)</code> is the worker assignment part, which is shown directly after this section.</p>
+
+<p>After the worker assignment, the manager simply informs the tallier that the worker assignment has done, and sits there, waiting for the tallier to report the final result.</p>
+
+<figure class='code'><figcaption><span>manager (cont.)</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="nv">To</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>    <span class="k">case</span> <span class="p">(</span><span class="nv">To</span> <span class="o">-</span> <span class="nv">From</span><span class="p">)</span> <span class="k">of</span>
+</span><span class='line'>         <span class="nv">SmallRange</span> <span class="k">when</span> <span class="nv">SmallRange</span> <span class="o">=&lt;</span> <span class="mi">1000</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="nv">List</span> <span class="o">=</span> <span class="nn">lists</span><span class="p">:</span><span class="nf">seq</span><span class="p">(</span><span class="nv">From</span><span class="p">,</span> <span class="nv">To</span><span class="p">),</span>
+</span><span class='line'>            <span class="nv">WorkerPid</span> <span class="o">=</span> <span class="nb">spawn</span><span class="p">(</span><span class="k">fun</span> <span class="n">worker</span><span class="o">/</span><span class="mi">0</span><span class="p">),</span>
+</span><span class='line'>            <span class="c">%% register the worker with tallier</span>
+</span><span class='line'>            <span class="nv">TallierPid</span> <span class="o">!</span> <span class="p">{</span> <span class="n">self</span><span class="p">(),</span> <span class="nv">WorkerPid</span> <span class="p">},</span>
+</span><span class='line'>            <span class="c">%% send the problem for the worker to work out</span>
+</span><span class='line'>            <span class="nv">WorkerPid</span> <span class="o">!</span> <span class="p">{</span> <span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">List</span> <span class="p">};</span>
+</span><span class='line'>        <span class="p">_</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="nv">Mid</span> <span class="o">=</span> <span class="nn">mylib</span><span class="p">:</span><span class="nf">floor</span><span class="p">((</span><span class="nv">To</span> <span class="o">+</span> <span class="nv">From</span><span class="p">)</span> <span class="ow">div</span> <span class="mi">2</span><span class="p">),</span>
+</span><span class='line'>            <span class="n">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">From</span><span class="p">,</span> <span class="nv">Mid</span><span class="p">),</span>
+</span><span class='line'>            <span class="n">solver</span><span class="p">(</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">Mid</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nv">To</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This code defines the problem domain, splits the work, hire workers and assign the split work to them. It’s a classic divide-and-conquer structure, however, we have to be careful not to make the range too small, as the number of processes may (or in this case, will) exceed the default system limit. As I tested, my computer can sum prime numbers from a list of 1000 elements in a heartbeat so I just chose that number to be the upper bound of the size for each worker to work on.</p>
+
+<p>Finally,</p>
+
+<figure class='code'><figcaption><span>tallier</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='erlang'><span class='line'><span class="nf">tallier</span><span class="p">(</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="nv">Workers</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">AssignFinished</span><span class="p">)</span> <span class="o">-&gt;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">receive</span>
+</span><span class='line'>        <span class="p">{</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="n">true</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="c">%% This message is from the solver</span>
+</span><span class='line'>            <span class="c">%% It tells the tallier that</span>
+</span><span class='line'>            <span class="c">%% worker assignment has finished</span>
+</span><span class='line'>            <span class="n">tallier</span><span class="p">(</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="nv">Workers</span><span class="p">,</span> <span class="nv">X</span><span class="p">,</span> <span class="n">true</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">{</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="nv">WorkerPid</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="c">%% This message is from the solver</span>
+</span><span class='line'>            <span class="c">%% Register WorkerPid</span>
+</span><span class='line'>            <span class="n">tallier</span><span class="p">(</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="p">[</span><span class="nv">WorkerPid</span> <span class="p">|</span> <span class="nv">Workers</span><span class="p">],</span> <span class="nv">X</span><span class="p">,</span> <span class="nv">AssignFinished</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">{</span><span class="nv">WorkerPid</span><span class="p">,</span> <span class="nv">Sum</span><span class="p">}</span> <span class="o">-&gt;</span>
+</span><span class='line'>            <span class="nv">Tally</span> <span class="o">=</span> <span class="nv">X</span> <span class="o">+</span> <span class="nv">Sum</span><span class="p">,</span>
+</span><span class='line'>            <span class="c">%% Remove worker from Workers list</span>
+</span><span class='line'>            <span class="nv">NewWorkerList</span> <span class="o">=</span> <span class="nv">Workers</span> <span class="o">--</span> <span class="p">[</span><span class="nv">WorkerPid</span><span class="p">],</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nv">AssignFinished</span> <span class="k">of</span>
+</span><span class='line'>                <span class="n">true</span> <span class="o">-&gt;</span>
+</span><span class='line'>                    <span class="k">case</span> <span class="nv">NewWorkerList</span> <span class="k">of</span>
+</span><span class='line'>                        <span class="p">[]</span> <span class="o">-&gt;</span>
+</span><span class='line'>                            <span class="nv">SolverPid</span> <span class="o">!</span> <span class="p">{</span> <span class="n">self</span><span class="p">(),</span> <span class="nv">Tally</span> <span class="p">};</span>
+</span><span class='line'>                        <span class="p">_</span> <span class="o">-&gt;</span> <span class="n">tallier</span><span class="p">(</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="nv">NewWorkerList</span><span class="p">,</span> <span class="nv">Tally</span><span class="p">,</span> <span class="nv">AssignFinished</span><span class="p">)</span>
+</span><span class='line'>                    <span class="k">end</span><span class="p">;</span>
+</span><span class='line'>                <span class="p">_</span> <span class="o">-&gt;</span> <span class="n">tallier</span><span class="p">(</span><span class="nv">SolverPid</span><span class="p">,</span> <span class="nv">NewWorkerList</span><span class="p">,</span> <span class="nv">Tally</span><span class="p">,</span> <span class="nv">AssignFinished</span><span class="p">)</span>
+</span><span class='line'>            <span class="k">end</span>
+</span><span class='line'>    <span class="k">end</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>The tallier keeps track of 4 “variables”:
+1. The Solver’s ID – to recognize messages from the solver and to report final tally to the solver.
+2. A list of <code>Worker</code>s’ IDs whose results have been reported yet.
+3. <code>X</code> – The previous tally.
+4. <code>AssignFinished</code> – a flag indicating that all workers have been assigned.</p>
+
+<p>The tallier has to look after three types of messages:
+1. Message from the manager that the job has been divided up and the workers have been dispatched. In this case, the tallier knows that when the <code>Worker</code>s list gets down to empty, the computation is finished.
+2. Message from the manager that registers a worker with the tallier. The tallier adds this worker’s ID to the <code>Worker</code>s list and waits for that worker to return his or her result.
+3. Message from the worker indicating the worker’s ID and the result. The tallier removes the worker’s ID from the waiting pool and adds the result to the tally. When the waiting pool is empty and <code>AssignFinished</code> is true, it signals the end of the job and thus the tallier reports the final tally to the manager (solver).</p>
+
+<p>There we go!  Running the program on my work computer (QuadCore) gives me the correct result in less than 5 seconds. About 8 seconds for my laptop (which is a Core 2 Duo). Non of this is even remotely imaginable with the traditional approach.</p>
+
+<p>Also, as you may have guessed, all cores on the CPU are fully utilized.</p>
+
+<p><img class="center" src="/assets/images/cpu2.png"></p>
+
+<p>Programming in Erlang is fun!</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2009-06-01T09:37:00-04:00" pubdate data-updated="true">Jun 1<span>st</span>, 2009</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/erlang-/'>erlang,</a>, <a class='category' href='/blog/categories/parallel/'>parallel</a>, <a class='category' href='/blog/categories/programming/'>programming</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2009/03/19/integrating-smartgwt-with-asp-dot-net-json-web-service/" title="Previous Post: Integrating SmartGWT with ASP.NET JSON web service">&laquo; Integrating SmartGWT with ASP.NET JSON web service</a>
+      
+      
+        <a class="basic-alignment right" href="/2009/06/12/enable-auto-complete-in-a-pdb-session/" title="Next Post: Enable Auto-complete in a PDB session">Enable Auto-complete in a PDB session &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/';
+        var disqus_url = 'http://kevinjqiu.github.com/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="k">class</span> <span class="nc">CurryTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">test_with_no_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nd">@curried</span>
+        <span class="k">def</span> <span class="nf">do_nothing</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">do_nothing</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">test_with_int_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nd">@curried</span>
+        <span class="k">def</span> <span class="nf">add_int</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">add_int</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span><span class="mi">2</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">test_with_str_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nd">@curried</span>
+        <span class="k">def</span> <span class="nf">add_str</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEquals</span><span class="p">(</span><span class="s">&quot;ab&quot;</span><span class="p">,</span> <span class="n">add_str</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)(</span><span class="s">&quot;b&quot;</span><span class="p">))</span>
+</pre></div>

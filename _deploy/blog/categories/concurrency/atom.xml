@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: concurrency | Reminiscential: of or pertaining to rememberance]]></title>
+  <link href="http://kevinjqiu.github.com/blog/categories/concurrency/atom.xml" rel="self"/>
+  <link href="http://kevinjqiu.github.com/"/>
+  <updated>2013-11-20T13:44:10-05:00</updated>
+  <id>http://kevinjqiu.github.com/</id>
+  <author>
+    <name><![CDATA[Kevin Jing Qiu]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[First dip into Golang's concurrency]]></title>
+    <link href="http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency/"/>
+    <updated>2013-11-20T11:53:00-05:00</updated>
+    <id>http://kevinjqiu.github.com/2013/11/20/first-dip-into-golangs-concurrency</id>
+    <content type="html"><![CDATA[<p>I have been toying with Google's <a href="http://golang.org">Go</a> language lately.  The native support for concurrent programming is one of Go's major selling point.</p>
+
+<p>Go has low-level primitives for concurrent programming such as <a href="http://golang.org/pkg/sync/#Mutex">mutexes</a> and <a href="http://golang.org/pkg/sync/atomic/">atomic</a>, but also provides high-level language constructs for building concurrent programs via goroutines and channels.</p>
+
+<p>Goroutines are functions executing in the same address space as other goroutines, like threads, but unlike threads, they communicate to each other via channels, not shared variables.</p>
+
+<p>Channels provide a lock-free mechanism for goroutines to communicate.  To me, conceptually it feels a lot like a Unix socket: you can wait on it for data, or you can send data to it.  In Go, channels are also strongly and statically typed.</p>
+
+<p>For me, the best way to learn something is to put it to practice.  I use one problem from <a href="http://projecteuler.net">Project Euler</a>.</p>
+
+<pre><code>Find the sum of all prime numbers under 2 million
+</code></pre>
+
+<p>I wrote an Erlang version of this problem <a href="/blog/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/">before</a>, but since then, Erlang kind of fell off my radar.  However, the problem and the concurrent solution is still relevant.</p>
+
+<h1>Test if a number is prime</h1>
+
+<p>I'll briefly go over primality test function, since it's not the focus of this blog post:</p>
+
+<p>```go
+func isPrime(n int) bool {</p>
+
+<pre><code>if n == 1 || n == 2 {
+    return true
+}
+
+if math.Mod(float64(n), 2) == 0 {
+    return false
+}
+
+for i := 3.0; i &lt;= math.Floor(math.Sqrt(float64(n))); i += 2.0 {
+    if math.Mod(float64(n), i) == 0 {
+        return false
+    }
+}
+
+return true
+</code></pre>
+
+<p>}
+```</p>
+
+<p>I understand there are other faster primality tests but I opted for this basic algorithm for simplicity.</p>
+
+<h1>Non-concurrent version</h1>
+
+<p>A naive way to solve this problem is to call <code>isPrime</code> on every number below 2 million, if it's a prime, add it to the tally.</p>
+
+<p>```go
+func sumPrimesUpto(n int) int {</p>
+
+<pre><code>sum := 0
+for i := 1; i &lt;= n; i++ {
+    if isPrime(i) {
+        sum += i
+    }
+}
+
+return sum
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Here's the main function:
+```
+func main() {</p>
+
+<pre><code>upperBound, err := strconv.Atoi(os.Args[1])
+if err != nil {
+    fmt.Println("Invalid argument.")
+    os.Exit(1);
+}
+
+result := sumPrimesUpto(upperBound)
+fmt.Println(result)
+</code></pre>
+
+<p>}
+```</p>
+
+<p>Now run it and time it:
+```
+$ time go run sumprimes1.go 2000000
+142913828923</p>
+
+<p>real    0m27.032s
+user    0m26.953s
+sys     0m0.029s
+```</p>
+
+<p>Not too bad.  I remember when I ran this algorithm 4 years ago on my previous laptop (Core-2 Duo) I wasn't able to produce any result in a tolerable timeframe.  My current machine is a 3-year old Quad Core i7.</p>
+
+<h1>Concurrent version</h1>
+
+<p>If you are on Linux and you open system monitor while the previous program was running, you can see that only one CPU was saturated and constantly running at near 100%, but all other cores are nearly idle.  Of course this is a huge waste of our computing resource.  <code>isPrime</code> function is what takes up the CPU load, and because we're running testing the primality of all 2 million numbers inside a single thread, all of them have to be tested one after the other.  This is not great.  Instead, because we have more than one CPU core, we can give the other cores chances to do some of the work for us.</p>
+
+<p>If you were writing a Java or C++ program, you'd:
+- make a variable for the sum
+- loop from 1 to 2 million
+- spawn a new thread to do the primality test
+- inside the thread, if the primality test succeeds, lock the access to the <code>sum</code> variable, update <code>sum</code>, unlock</p>
+
+<p>Programs like this have a higher complexity than it should.  It may not look like it's too complicated for this case, but synchronization using <a href="http://en.wikipedia.org/wiki/Lock_(computer_science">locks</a>#Disadvantages) has inherent problems and is usually a source of bugs and defects.  Also, spawning as many threads as you can normally won't give you more throughput.  On the contrary, if you hand the OS more threads at once than the number of physical cores, context switching will happen and it will decrease your performance.</p>
+
+<p>Go's approach is very similar to Erlang's in concept.  In Erlang, the actor processes can't share variables, but instead, they can send data to the other processes.  In Go, goroutines normally don't share variables, but they communicate via the use of channels.</p>
+
+<h2>Channels</h2>
+
+<p>For this problem, we need to have the following channels:
+- jobs: the outstanding jobs need to be performed.  Each job is a number whose primality needs to be tested.  It's a buffered channel whose size is the number of physical cores.
+- results: the prime numbers that are already tested.  Buffered channel.  Can be as big as reasonable.
+- done: whether all workers have finished their job. Also a buffered channel whose size is the number of physical cores.</p>
+
+<h2>Goroutines</h2>
+
+<p>We need the following goroutines to:
+- take the next number and put it in the <code>jobs</code> channel
+- receive the next available job, run primality test, put the number on the <code>results</code> channel if succeeded, and signal the <code>done</code> channel.
+- receive the signal from the <code>done</code> channel.  If no signals are received, we have done all the primality test.</p>
+
+<p>Finally, we need to have a function to sum up all results.</p>
+
+<h2>Data structures</h2>
+
+<p>We want an abstraction of a <code>Job</code>.  In Go, that's a struct:</p>
+
+<p>```go
+type Job struct {</p>
+
+<pre><code>n int
+results chan&lt;-int
+</code></pre>
+
+<p>}
+```</p>
+
+<p>A job knows what number to test, and the results channel to which we can send the result.</p>
+
+<p>A job also knows how to <code>Do</code>:
+```go
+func (job *Job) Do() {</p>
+
+<pre><code>if isPrime(job.n) {
+    job.results &lt;- job.n
+}
+</code></pre>
+
+<p>}
+<code>``
+In Go, a function with a receiver is practically a method on a struct and is able to be called with</code>receiver.method`.</p>
+
+<h2>Rewrite sumPrimesUpto</h2>
+
+<p>Now, rewrite the <code>sumPrimesUpto</code> function:
+```go
+var workers = runtime.NumCPU()</p>
+
+<p>func sumPrimesUpto(n int) int {</p>
+
+<pre><code>jobs := make(chan Job, workers)
+results := make(chan int, n)
+done := make(chan struct{}, workers)
+
+go addJobs(jobs, results, n)
+
+for i := 0; i &lt; workers; i++ {
+    go doJobs(done, jobs)
+}
+
+go wait(done, results)
+
+return tally(results)
+</code></pre>
+
+<p>}
+```</p>
+
+<p>First, we need to know how many CPU cores the underlying platform knows about.  We only make the channel as big as the number of CPU cores.</p>
+
+<p>Then, we make the channels.  One thing to note is that the <code>done</code> channel receives an empty <code>struct</code>, because we use that only for signaling.  We don't really care what value of the signal is.  We could define a surrogate type: <code>type Signal struct{}</code>, but an anonymous type will do just fine.</p>
+
+<p>After that, we call <code>addJobs</code> as a goroutine.  The line <code>jobs &lt;- Job{i, results}</code> will block if the channel is already full.
+```go
+func addJobs(jobs chan&lt;-Job, results chan&lt;-int, n int) {</p>
+
+<pre><code>for i := 1; i &lt;= n; i++ {
+    jobs &lt;- Job{i, results}
+}
+close(jobs)
+</code></pre>
+
+<p>}
+```</p>
+
+<p>In a separate goroutine, we take the jobs from the <code>jobs</code> channel and process them in <code>doJobs</code>:
+```go
+func doJobs(done chan&lt;-struct{}, jobs &lt;-chan Job) {</p>
+
+<pre><code>for job := range jobs {
+    job.Do()
+}
+done &lt;- struct{}{}
+</code></pre>
+
+<p>}
+<code>``
+We also signal the</code>done<code>channel when the job is done. </code>struct{}{}` creates an instance of the anonymous type we use as the signal.</p>
+
+<p>In another separate goroutine, we wait until there's no more signals on the <code>done</code> channel.  This means that we have finished processing all jobs:
+```go
+func wait(done &lt;-chan struct{}, results chan int) {</p>
+
+<pre><code>for i := 0; i &lt; workers; i++ {
+    &lt;-done
+}
+close(results)
+</code></pre>
+
+<p>}
+<code>``
+At this point, we can safely close the</code>results` channel as there won't be any new results coming in.</p>
+
+<p>Finally, we can run <code>tally</code> on the results channel.
+```go
+func tally(results &lt;-chan int) int {</p>
+
+<pre><code>retval := 0
+for result := range results {
+    retval += result
+}
+
+return retval
+</code></pre>
+
+<p>}
+```</p>
+
+<p>One thing worth mentioning is that even though the channels we made are all bi-directional channels, in the specific functions, we can make them more restrictive by making them send-only (chan&lt;- Type) or receive-only (&lt;-chan Type) according to their actual usage in the local function to avoid accidents.</p>
+
+<p>The full gist can be found <a href="https://gist.github.com/kevinjqiu/7568264#file-sumprimes-go">here</a>.</p>
+
+<h2>Performance</h2>
+
+<p>So how does this concurrent version faire?</p>
+
+<p>```
+ $ time go run sumprimes.go 2000000
+ CPUS=4
+ 142913828923</p>
+
+<p> real    0m12.534s
+ user    0m44.289s
+ sys     0m0.175s
+```</p>
+
+<p>On my Quad Core i7, it takes 12 seconds, almost twice as fast as the non-concurrent version!  And if you open System Monitor, you can see all 4 cores are running near 100%.</p>
+
+<h1>Conclusion</h1>
+
+<p>So there's my first dip into Go's concurrency with an old problem. I like the concurrency primitives Go provides, even though it takes some getting used to.  Conceptually, goroutines are very similar to Erlang's actors.  Go has the advantage of a C-ish syntax that doesn't look like Prolog and it doesn't require a separate runtime as Erlang does.</p>
+]]></content>
+  </entry>
+  
+</feed>

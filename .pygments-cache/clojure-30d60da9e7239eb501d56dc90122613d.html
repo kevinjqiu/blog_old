@@ -1,0 +1,8 @@
+<div class="highlight"><pre><span class="p">(</span><span class="kd">defn </span><span class="nv">encode</span>
+  <span class="s">&quot;Return the message encoded by the specified polybius-square&quot;</span>
+  <span class="p">[</span><span class="nv">message</span> <span class="nv">polybius-square</span><span class="p">]</span>
+  <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">l2c</span> <span class="p">(</span><span class="nf">letter-2-code</span> <span class="nv">polybius-square</span><span class="p">)</span>
+        <span class="nv">tr2l</span> <span class="p">(</span><span class="nf">transposed-2-letter</span> <span class="nv">polybius-square</span><span class="p">)]</span>
+    <span class="p">(</span><span class="nb">apply </span><span class="nv">str</span>
+      <span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">tr2l</span> <span class="nv">%</span> <span class="nv">%</span><span class="p">)</span> <span class="p">(</span><span class="nf">partition</span> <span class="mi">2</span> <span class="p">(</span><span class="nb">apply interleave </span><span class="p">(</span><span class="nb">map </span><span class="o">#</span><span class="p">(</span><span class="nb">get </span><span class="nv">l2c</span> <span class="nv">%</span> <span class="nv">%</span><span class="p">)</span> <span class="nv">message</span><span class="p">)))))))</span>
+</pre></div>

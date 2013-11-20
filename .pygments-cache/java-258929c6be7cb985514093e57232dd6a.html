@@ -1,0 +1,16 @@
+<div class="highlight"><pre><span class="cm">/**</span>
+<span class="cm"> * Entry point classes define &lt;code&gt;onModuleLoad()&lt;/code&gt;.</span>
+<span class="cm"> */</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RateChecker</span> <span class="kd">implements</span> <span class="n">EntryPoint</span> <span class="o">{</span>
+
+    <span class="n">RateCheckerGinjector</span> <span class="n">_injector</span> <span class="o">=</span> <span class="n">GWT</span><span class="o">.</span><span class="na">create</span><span class="o">(</span><span class="n">RateCheckerGinjector</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onModuleLoad</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="kd">final</span> <span class="n">AppPresenter</span> <span class="n">appPresenter</span> <span class="o">=</span> <span class="n">_injector</span><span class="o">.</span><span class="na">getAppPresenter</span><span class="o">();</span>
+        <span class="n">appPresenter</span><span class="o">.</span><span class="na">go</span><span class="o">(</span><span class="n">RootPanel</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;root&quot;</span><span class="o">));</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</pre></div>
