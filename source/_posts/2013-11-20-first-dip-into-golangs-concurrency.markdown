@@ -6,19 +6,19 @@ comments: true
 categories: golang, concurrency
 ---
 
-I have been learning Google's Go[1] language lately.  The native support for concurrent programming is one of Go's major selling point.
+I have been learning Google's [Go](http://golang.org) language lately.  The native support for concurrent programming is one of Go's major selling point.
 
-Go has low-level primitives for concurrent programming such as mutexes[2] and atomic[3], but also provides high-level language constructs for building concurrent programs via goroutines and channels.
+Go has low-level primitives for concurrent programming such as [mutexes](http://golang.org/pkg/sync/#Mutex) and [atomic](http://golang.org/pkg/sync/atomic/), but also provides high-level language constructs for building concurrent programs via goroutines and channels.
 
 Goroutines are functions executing in the same address space as other goroutines, like threads, but unlike threads, they communicate to each other via channels, not shared variables.
 
 Channels provide a lock-free mechanism for goroutines to communicate.  To me, conceptually it feels a lot like a Unix socket: you can wait on it for data, or you can send data to it.  In Go, channels are also strongly and statically typed.
 
-For me, the best way to learn something is to put it to practice.  I use one problem from Project Euler[4]:
+For me, the best way to learn something is to put it to practice.  I use one problem from [Project Euler](http://projecteuler.net).
 
     Find the sum of all prime numbers under 2 million
 
-I wrote an Erlang version of this problem before[5], but since then, Erlang kind of fell off my radar.  However, the problem and the concurrent solution is still relevant.
+I wrote an Erlang version of this problem [before](/blog/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/), but since then, Erlang kind of fell off my radar.  However, the problem and the concurrent solution is still relevant.
 
 Test if a number is prime
 =========================
@@ -103,7 +103,7 @@ If you were writing a Java or C++ program, you'd:
 - spawn a new thread to do the primality test
 - inside the thread, if the primality test succeeds, lock the access to the `sum` variable, update `sum`, unlock
 
-Programs like this have a higher complexity than it should.  It may not look like it's too complicated for this case, but synchronization using locks[6] has inherent problems and is usually a source of bugs and defects.  Also, spawning as many threads as you can normally won't give you more throughput.  On the contrary, if you hand the OS more threads at once than the number of physical cores, context switching will happen and it will decrease your performance.
+Programs like this have a higher complexity than it should.  It may not look like it's too complicated for this case, but synchronization using [locks](http://en.wikipedia.org/wiki/Lock_(computer_science)#Disadvantages) has inherent problems and is usually a source of bugs and defects.  Also, spawning as many threads as you can normally won't give you more throughput.  On the contrary, if you hand the OS more threads at once than the number of physical cores, context switching will happen and it will decrease your performance.
 
 Go's approach is very similar to Erlang's in concept.  In Erlang, the actor processes can't share variables, but instead, they can send data to the other processes.  In Go, goroutines normally don't share variables, but they communicate via the use of channels.
 
@@ -245,11 +245,3 @@ Conclusion
 ==========
 
 So there's my first dip into Go's concurrency with an old problem. I like the concurrency primitives Go provides, even though it takes some getting used to.  Conceptually, goroutines are very similar to Erlang's actors.  Go has the advantage of a C-ish syntax that doesn't look like Prolog and it doesn't require a separate runtime as Erlang does. 
-
-
-[1](http://golang.org)
-[2](http://golang.org/pkg/sync/#Mutex)
-[3](http://golang.org/pkg/sync/atomic/)
-[4](http://projecteuler.net)
-[5](/blog/2009/06/01/fast-and-elegant-way-to-sum-primes-in-a-gigantic-range/)
-[6](http://en.wikipedia.org/wiki/Lock_(computer_science)#Disadvantages)
