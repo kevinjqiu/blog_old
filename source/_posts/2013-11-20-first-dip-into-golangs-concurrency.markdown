@@ -6,7 +6,7 @@ comments: true
 categories: golang, concurrency
 ---
 
-I have been learning Google's [Go](http://golang.org) language lately.  The native support for concurrent programming is one of Go's major selling point.
+I have been toying with Google's [Go](http://golang.org) language lately.  The native support for concurrent programming is one of Go's major selling point.
 
 Go has low-level primitives for concurrent programming such as [mutexes](http://golang.org/pkg/sync/#Mutex) and [atomic](http://golang.org/pkg/sync/atomic/), but also provides high-level language constructs for building concurrent programs via goroutines and channels.
 
