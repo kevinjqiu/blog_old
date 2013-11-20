@@ -1,9 +1,0 @@
-<div class="highlight"><pre><span class="p">(</span><span class="kd">defn- </span><span class="nv">ansi-escape-seq</span> <span class="p">[</span><span class="o">&amp;</span> <span class="nv">codes</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;&amp;#092;&amp;#048;33[%sm&quot;</span> <span class="p">(</span><span class="nb">join </span><span class="s">&quot;;&quot;</span> <span class="p">(</span><span class="nb">filter </span><span class="o">#</span><span class="p">(</span><span class="nb">not= </span><span class="nv">%</span> <span class="nv">nil</span><span class="p">)</span> <span class="nv">codes</span><span class="p">))))</span>
-
-<span class="p">(</span><span class="kd">defrecord </span><span class="nv">Lumiere</span> <span class="p">[</span><span class="nv">text</span> <span class="nv">fg</span> <span class="nv">bg</span> <span class="nv">styles</span><span class="p">]</span>
-  <span class="nv">Object</span>
-  <span class="p">(</span><span class="nf">toString</span> <span class="p">[</span><span class="nv">this</span><span class="p">]</span>
-    <span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">prefix</span> <span class="p">(</span><span class="nf">ansi-escape-seq</span> <span class="p">(</span><span class="ss">:fg</span> <span class="nv">this</span><span class="p">)</span> <span class="p">(</span><span class="ss">:bg</span> <span class="nv">this</span><span class="p">)</span> <span class="p">(</span><span class="ss">:styles</span> <span class="nv">this</span><span class="p">))]</span>
-      <span class="p">(</span><span class="nf">format</span> <span class="s">&quot;%s%s%s&quot;</span> <span class="nv">prefix</span> <span class="p">(</span><span class="ss">:text</span> <span class="nv">this</span><span class="p">)</span> <span class="nv">RESET</span><span class="p">))))</span>
-</pre></div>

@@ -1,7 +1,0 @@
-<div class="highlight"><pre><span class="nf">worker</span><span class="p">()</span> <span class="o">-&gt;</span>
-    <span class="k">receive</span>
-        <span class="p">{</span><span class="nv">TallierPid</span><span class="p">,</span> <span class="nv">L</span><span class="p">}</span> <span class="o">-&gt;</span>
-            <span class="nv">Sum</span> <span class="o">=</span> <span class="nn">lists</span><span class="p">:</span><span class="nf">sum</span><span class="p">(</span><span class="nn">lists</span><span class="p">:</span><span class="nf">filter</span><span class="p">(</span><span class="k">fun</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span><span class="o">-&gt;</span><span class="nn">mylib</span><span class="p">:</span><span class="nf">is_prime</span><span class="p">(</span><span class="nv">X</span><span class="p">)</span> <span class="k">end</span><span class="p">,</span> <span class="nv">L</span><span class="p">)),</span>
-            <span class="nv">TallierPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">self</span><span class="p">(),</span> <span class="nv">Sum</span><span class="p">}</span>
-    <span class="k">end</span><span class="p">.</span>
-</pre></div>

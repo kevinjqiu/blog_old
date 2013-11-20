@@ -1,7 +1,0 @@
-<div class="highlight"><pre><span class="n">DICT</span> <span class="o">=</span> <span class="s">&#39;/usr/share/dictdef words(file=DICT):</span>
-    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span>
-    <span class="n">retval</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">retval</span> <span class="p">]</span>
-    <span class="k">return</span> <span class="n">retval</span>
-</pre></div>
